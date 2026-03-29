@@ -18,9 +18,8 @@ export async function POST(request: Request) {
     const ext = file.name.split('.').pop() || 'png';
     const path = `uploads/${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
 
-    // Upload to 'images' or 'portfolio' bucket depending on your schema.
-    // Using 'images' as it's the most common default name, but can be updated via env var.
-    const bucketName = process.env.NEXT_PUBLIC_SUPABASE_BUCKET || 'images';
+    // Upload to 'portfolio-images' bucket depending on your schema.
+    const bucketName = process.env.NEXT_PUBLIC_SUPABASE_BUCKET || 'portfolio-images';
 
     const { data, error } = await supabase.storage
       .from(bucketName)
