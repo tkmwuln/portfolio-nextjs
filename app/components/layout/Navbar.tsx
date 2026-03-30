@@ -46,11 +46,15 @@ export default function Navbar() {
   return (
     <>
       <nav
-        className={`sticky top-0 z-50 flex items-center justify-between px-4 md:px-8 py-3.5 transition-all duration-300 ${
+        className={`sticky top-0 z-50 flex items-center justify-between px-4 md:px-8 py-3.5 transition-all duration-300 ease-out ${
           scrolled
-            ? "bg-white dark:bg-black backdrop-blur-xl border-b border-gray-200 dark:border-gray-800 shadow-sm"
-            : "bg-white/95 dark:bg-black/95 backdrop-blur-md border-b border-transparent"
-        }`}
+            ? "bg-white dark:bg-black backdrop-blur-xl border-b border-gray-200 dark:border-gray-800 shadow-sm translate-y-0"
+            : "bg-white/95 dark:bg-black/95 backdrop-blur-md border-b border-transparent translate-y-0"
+        } ${scrolled ? "py-2.5" : "py-3.5"}`}
+        style={{
+          transform: scrolled ? 'translateY(0)' : 'translateY(0)',
+          willChange: 'padding, box-shadow, border-color'
+        }}
       >
         {/* Logo */}
         <Link
@@ -69,9 +73,9 @@ export default function Navbar() {
               <Link
                 key={href}
                 href={href}
-                className={`px-3.5 py-1.5 rounded-pill text-[13px] font-medium no-underline transition-all duration-200 ${
+                className={`relative px-3.5 py-1.5 rounded-pill text-[13px] font-medium no-underline transition-all duration-200 ease-out transform hover:scale-[1.02] active:scale-[0.98] ${
                   active
-                    ? "bg-black text-white dark:bg-white dark:text-black"
+                    ? "bg-black text-white dark:bg-white dark:text-black scale-[1.03] shadow-sm"
                     : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-black dark:hover:text-white"
                 }`}
               >
@@ -99,7 +103,7 @@ export default function Navbar() {
           <button
             onClick={toggleTheme}
             title="Toggle dark mode"
-            className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-200 dark:border-gray-700 hover:border-black dark:hover:border-white text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-all duration-200 cursor-pointer bg-transparent"
+            className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-200 dark:border-gray-700 hover:border-black dark:hover:border-white text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-all duration-200 ease-out cursor-pointer bg-transparent hover:scale-110 active:scale-95"
             aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
           >
             {theme === "dark" ? (
@@ -146,10 +150,9 @@ export default function Navbar() {
       </nav>
 
       {/* Mobile Menu Drawer */}
-      {mobileOpen && (
-        <div className="fixed inset-0 z-40 md:hidden">
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-          <div className="absolute top-0 right-0 h-full w-72 bg-white dark:bg-black border-l border-gray-200 dark:border-gray-800 flex flex-col py-8 px-6 shadow-xl">
+      <div className={`fixed inset-0 z-40 md:hidden transition-all duration-300 ease-out ${mobileOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+        <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
+        <div className={`absolute top-0 right-0 h-full w-72 bg-white dark:bg-black border-l border-gray-200 dark:border-gray-800 flex flex-col py-8 px-6 shadow-xl transition-transform duration-300 ease-out ${mobileOpen ? 'translate-x-0' : 'translate-x-full'}`}>
             <div className="flex items-center justify-between mb-8">
               <span className="font-display font-extrabold text-[16px] text-black dark:text-white">Menu</span>
               <button onClick={() => setMobileOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer bg-transparent text-sm">✕</button>
@@ -182,9 +185,10 @@ export default function Navbar() {
                 <div className="nav-available justify-center">{t("nav.open_to_work")}</div>
               )}
             </div>
+            </div>
           </div>
         </div>
-      )}
+      </div>
     </>
   );
 }
