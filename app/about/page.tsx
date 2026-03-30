@@ -1,4 +1,19 @@
 import Link from "next/link";
+import { PrismaClient } from "../generated/prisma/client";
+
+const prisma = new PrismaClient();
+
+async function getProfileData() {
+  try {
+    const user = await prisma.user.findFirst({
+      include: { skills: true },
+    });
+    return user;
+  } catch (error) {
+    console.error("Failed to fetch profile data:", error);
+    return null;
+  }
+}
 
 const EXPERIENCE = [
   {
@@ -52,14 +67,18 @@ const SERVICES = [
   { icon: "🌐", name: "Web Design", desc: "Responsive web design and design systems" },
 ];
 
-const SKILLS = [
+const DEFAULT_SKILLS = [
   "Cognitive Psychology", "System Thinking", "CX Design", "Service Design",
   "Design Strategy", "UX Research", "Figma", "Prototyping", "User Testing",
   "Agile / Scrum", "OKR Framework", "Stakeholder Management",
   "Design Systems", "Information Architecture", "AI Product Management",
 ];
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const profile = await getProfileData();
+
+  const skills = profile?.skills?.map(s => s.name) || DEFAULT_SKILLS;
+
   return (
     <div className="min-h-screen bg-page">
       <div className="mx-auto w-full max-w-[1280px] px-4 md:px-6 py-8 md:py-12 space-y-6 md:space-y-8">
@@ -77,8 +96,8 @@ export default function AboutPage() {
           {/* Avatar */}
           <div className="w-24 h-24 rounded-full overflow-hidden relative shrink-0 ring-4 ring-white/10">
             <img
-              src="/images/profile-pic.png"
-              alt="Putri Wulandari"
+              src={profile?.avatar || "/images/profile-pic.png"}
+              alt={profile?.name || "Putri Wulandari"}
               className="object-cover w-full h-full absolute inset-0 z-10 bg-card"
             />
             {/* Fallback initials */}
@@ -93,17 +112,17 @@ export default function AboutPage() {
               <span className="text-[12px] text-white/60">Available for new opportunities</span>
             </div>
             <h1 className="font-display text-[42px] font-extrabold text-white tracking-tight leading-tight mb-2">
-              Putri Wulandari
+              {profile?.name || "Putri Wulandari"}
             </h1>
             <p className="text-white/50 text-[15px] mb-4">
               AI Product Manager · Service Designer · UX Lead
             </p>
             <p className="text-white/70 max-w-xl leading-relaxed text-sm">
-              💫 I&apos;m a digital Product Manager and Service Designer. I love using cognitive psychology to humanize tech and solve people problems. I am a keen learner, team player, and enjoy taking on new challenges and side projects.
+              {profile?.bio || "💫 I'm a digital Product Manager and Service Designer. I love using cognitive psychology to humanize tech and solve people problems. I am a keen learner, team player, and enjoy taking on new challenges and side projects."}
             </p>
             <div className="flex flex-wrap gap-3 mt-6">
               <a
-                href="https://www.linkedin.com/in/putriwulandari-ptrwuln/"
+                href={profile?.linkedin || "https://www.linkedin.com/in/putriwulandari-ptrwuln/"}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-accent text-[13px] py-2.5 px-5"
@@ -183,7 +202,7 @@ export default function AboutPage() {
           <p className="label uppercase tracking-widest text-ink-3 mb-2">Expertise</p>
           <h2 className="font-display text-2xl font-bold text-ink tracking-tight mb-6">Skills & Tools</h2>
           <div className="flex flex-wrap gap-2">
-            {SKILLS.map((skill) => (
+            {skills.map((skill) => (
               <span key={skill} className="expertise-tag">{skill}</span>
             ))}
           </div>
@@ -198,7 +217,7 @@ export default function AboutPage() {
             Open to PM, UX Lead, and Service Design opportunities. 500+ connections on LinkedIn.
           </p>
           <a
-            href="https://www.linkedin.com/in/putriwulandari-ptrwuln/"
+            href={profile?.linkedin || "https://www.linkedin.com/in/putriwulandari-ptrwuln/"}
             target="_blank"
             rel="noopener noreferrer"
             className="btn-primary"

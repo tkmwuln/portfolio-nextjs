@@ -1,132 +1,51 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { PrismaClient } from "../generated/prisma/client";
 
-const PROJECTS = [
-  {
-    id: "s1",
-    title: "E-Health Platform — SIMRS Kesehatan",
-    slug: "simrs-kesehatan",
-    description: "End-to-end UX design for hospital management system serving 50k+ monthly users across Indonesia's health ecosystem. Developed SIMRS, SIMKLINIK, and vaccination health ecosystem design.",
-    image: null,
-    category: "Govtech",
-    tags: ["UX Design", "Service Design", "E-Health"],
-    clientName: "Telkom Indonesia",
-    projectYear: 2024,
-    metric: "50k+ MAU",
-    gradient: "linear-gradient(140deg, #2c3e50 0%, #3498db 100%)",
-    featured: true,
-  },
-  {
-    id: "s2",
-    title: "Strategic CX Platform",
-    slug: "cx-platform",
-    description: "Designed and led UX for Telkom's customer experience platform — improving conversion by 38% across checkout flows through research-driven redesign.",
-    image: null,
-    category: "B2B SaaS",
-    tags: ["CX Design", "Product Strategy", "Research"],
-    clientName: "Telkom Indonesia",
-    projectYear: 2023,
-    metric: "+38% Conversion",
-    gradient: "linear-gradient(140deg, #0f2027 0%, #203a43 50%, #2c5364 100%)",
-    featured: true,
-  },
-  {
-    id: "s3",
-    title: "Government Procurement UX",
-    slug: "lkpp-procurement",
-    description: "Service design & UX lead for LKPP (National Procurement Agency) digital procurement platform. Streamlined complex government procurement flows.",
-    image: null,
-    category: "Govtech",
-    tags: ["Service Design", "Government", "UX Research"],
-    clientName: "LKPP",
-    projectYear: 2024,
-    metric: "10M+ Users",
-    gradient: "linear-gradient(140deg, #4b1248 0%, #f0c27b 100%)",
-    featured: true,
-  },
-  {
-    id: "s4",
-    title: "Fintech Onboarding — D7 Retention",
-    slug: "fintech-onboarding",
-    description: "Redesigned fintech onboarding flow that improved 7-day retention by 61% using cognitive psychology principles and behavior-driven design.",
-    image: null,
-    category: "Fintech",
-    tags: ["UX Design", "Onboarding", "Psychology"],
-    clientName: "WeekndLabs Studio",
-    projectYear: 2022,
-    metric: "+61% D7 Retention",
-    gradient: "linear-gradient(140deg, #373b44 0%, #4286f4 100%)",
-    featured: false,
-  },
-  {
-    id: "s5",
-    title: "Design System — 200+ Components",
-    slug: "design-system",
-    description: "Built a comprehensive design system from scratch with 200+ tokens and components for multi-product ecosystem, including documentation and governance framework.",
-    image: null,
-    category: "Design System",
-    tags: ["Design System", "Component Library", "Docs"],
-    clientName: "WeekndLabs Studio",
-    projectYear: 2021,
-    metric: "200+ Components",
-    gradient: "linear-gradient(140deg, #1a1c2c 0%, #4a192c 100%)",
-    featured: false,
-  },
-  {
-    id: "s6",
-    title: "INA DIGITAL — National Identity Platform",
-    slug: "ina-digital",
-    description: "Currently leading product management and design at INA Digital, Indonesia's national digital identity and government service platform.",
-    image: null,
-    category: "Govtech",
-    tags: ["Product Management", "Government", "Identity"],
-    clientName: "INA DIGITAL",
-    projectYear: 2025,
-    metric: "National Scale",
-    gradient: "linear-gradient(140deg, #141e30 0%, #243b55 100%)",
-    featured: true,
-  },
-  {
-    id: "s7",
-    title: "Blockchain Service Design",
-    slug: "blockchain-service",
-    description: "UX and service design for blockchain-based government services, simplifying complex decentralized workflows for non-technical users.",
-    image: null,
-    category: "Blockchain",
-    tags: ["Blockchain", "Service Design", "UX"],
-    clientName: "WeekndLabs Studio",
-    projectYear: 2023,
-    metric: "3 Products",
-    gradient: "linear-gradient(140deg, #1f1c2c 0%, #928dab 100%)",
-    featured: false,
-  },
-  {
-    id: "s8",
-    title: "EMR & Vaccination Ecosystem",
-    slug: "emr-vaccination",
-    description: "Electronic Medical Records and vaccination management UX design, part of Indonesia's Satu Sehat (One Digital Health) initiative.",
-    image: null,
-    category: "E-Health",
-    tags: ["E-Health", "UX Design", "Government"],
-    clientName: "Telkom Indonesia",
-    projectYear: 2024,
-    metric: "Satu Sehat",
-    gradient: "linear-gradient(140deg, #2b5876 0%, #4e4376 100%)",
-    featured: false,
-  },
-];
+const prisma = new PrismaClient();
 
-const ALL_CATEGORIES = ["All", ...Array.from(new Set(PROJECTS.map((p) => p.category)))];
+async function getProjects() {
+  try {
+    return await prisma.project.findMany({
+      where: { published: true },
+      orderBy: { createdAt: "desc" },
+    });
+  } catch (error) {
+    console.error("Failed to fetch projects:", error);
+    return [];
+  }
+}
 
 export default function PortfolioPage() {
+  const [projects, setProjects] = useState<any[]>([]);
   const [activeCategory, setActiveCategory] = useState("All");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getProjects().then((data) => {
+      setProjects(data);
+      setLoading(false);
+    });
+  }, []);
+
+  const ALL_CATEGORIES = ["All", ...Array.from(new Set(projects.map((p) => p.category || "Uncategorized")))];
 
   const filtered =
     activeCategory === "All"
-      ? PROJECTS
-      : PROJECTS.filter((p) => p.category === activeCategory);
+      ? projects
+      : projects.filter((p) => (p.category || "Uncategorized") === activeCategory);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-page">
+        <div className="mx-auto w-full max-w-[1280px] px-6 py-12 flex items-center justify-center">
+          <p className="text-ink-2">Loading projects...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-page">
@@ -138,7 +57,7 @@ export default function PortfolioPage() {
             Portfolio <span className="text-gradient">Showcase</span>
           </h1>
           <p className="text-ink-2 max-w-lg text-sm font-light leading-relaxed">
-            Selected case studies spanning Govtech, Fintech, E-Health, and B2B SaaS — 
+            Selected case studies spanning Govtech, Fintech, E-Health, and B2B SaaS —
             built with research, shipped with care.
           </p>
         </div>
@@ -171,12 +90,12 @@ export default function PortfolioPage() {
               {/* Cover */}
               <div
                 className="h-48 w-full flex items-end p-5 relative overflow-hidden"
-                style={{ background: project.gradient }}
+                style={{ background: project.gradient || "linear-gradient(140deg, #2c3e50 0%, #3498db 100%)" }}
               >
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                 <div className="relative z-10 flex items-center gap-2">
                   <span className="text-[10px] bg-white/20 text-white/80 px-2.5 py-1 rounded-pill font-semibold tracking-wider uppercase backdrop-blur-sm">
-                    {project.category}
+                    {project.category || "Uncategorized"}
                   </span>
                   {project.featured && (
                     <span className="text-[10px] bg-accent/80 text-white px-2.5 py-1 rounded-pill font-semibold tracking-wider uppercase">
@@ -203,7 +122,7 @@ export default function PortfolioPage() {
                 {/* Metric */}
                 <div className="flex items-center justify-between">
                   <div className="flex flex-wrap gap-1">
-                    {project.tags.slice(0, 2).map((tag) => (
+                    {(project.tags || []).slice(0, 2).map((tag: string) => (
                       <span key={tag} className="text-[10px] text-ink-3 bg-card2 px-2 py-0.5 rounded-full border border-[var(--border)]">
                         {tag}
                       </span>

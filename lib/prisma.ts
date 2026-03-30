@@ -1,14 +1,13 @@
-import { createClient } from '@/utils/supabase/server';
-import { cookies } from 'next/headers';
+import { PrismaClient } from '@/app/generated/prisma'
 
-// Bridge the Prisma call to your active Supabase DB instance
-export const prisma = {
-  project: {
-    count: async () => {
-      const cookieStore = await cookies();
-      const supabase = createClient(cookieStore);
-      const { count } = await supabase.from('projects').select('*', { count: 'exact', head: true });
-      return count || 0;
-    }
-  }
-};
+const prismaClientSingleton = () => {
+  return new PrismaClient()
+}
+
+declare global {
+  var prisma: undefined | ReturnType<typeof prismaClientSingleton>
+}
+
+export const prisma = globalThis.prisma ?? prismaClientSingleton()
+
+if (process.env.NODE_ENV !== 'production') globalThis.prisma = prisma
