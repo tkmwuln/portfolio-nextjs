@@ -1,20 +1,14 @@
-import { createServerClient } from "@supabase/ssr";
-import { type NextRequest, NextResponse } from "next/server";
+import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
-
-export const createClient = (request: NextRequest) => {
-  // Create an unmodified response
+export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  });
+    request,
+  })
 
   const supabase = createServerClient(
-    supabaseUrl!,
-    supabaseKey!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!,
     {
       cookies: {
         getAll() {
@@ -30,8 +24,30 @@ export const createClient = (request: NextRequest) => {
           )
         },
       },
-    },
-  );
+    }
+  )
+
+  // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
+  // creating a new response object with NextResponse.next() make sure to
+  // pass request in it, like so:
+  // const myNewResponse = NextResponse.next({ request })
+  // and copy over the cookies, like so:
+  // myNewResponse.cookies.setAll(supabaseResponse.cookies.getAll())
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  // Protect Dashboard routes
+  if (
+    !user &&
+    request.nextUrl.pathname.startsWith('/dashboard')
+  ) {
+    // no user, potentially respond by redirecting the user to the login page
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    return NextResponse.redirect(url)
+  }
 
   return supabaseResponse
-};
+}
