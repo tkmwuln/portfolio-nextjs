@@ -1,7 +1,5 @@
 import Link from "next/link";
-import { PrismaClient } from "../generated/prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma'
 
 async function getProfileData() {
   try {
