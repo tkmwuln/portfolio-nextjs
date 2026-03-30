@@ -46,16 +46,16 @@ export default function Navbar() {
   return (
     <>
       <nav
-        className={`sticky top-0 z-50 flex items-center justify-between px-4 md:px-8 py-3.5 transition-all duration-500 ${
+        className={`sticky top-0 z-50 flex items-center justify-between px-4 md:px-8 py-3.5 transition-all duration-300 ${
           scrolled
-            ? "bg-white/30 dark:bg-[#FFFFFF]/50 backdrop-blur-2xl border-b border-white/60 dark:border-white/[0.04] shadow-[0_2px_24px_rgba(0,0,0,0.07)] dark:shadow-[0_4px_40px_rgba(0,0,0,0.7)]"
-            : "bg-white/10 dark:bg-[#FFFFFF]/20 backdrop-blur-xl border-b border-transparent"
+            ? "bg-white dark:bg-black backdrop-blur-xl border-b border-gray-200 dark:border-gray-800 shadow-sm"
+            : "bg-white/95 dark:bg-black/95 backdrop-blur-md border-b border-transparent"
         }`}
       >
         {/* Logo */}
         <Link
           href="/"
-          className="font-display font-extrabold text-[17px] tracking-tight text-ink no-underline flex items-baseline gap-0.5"
+          className="font-display font-extrabold text-[17px] tracking-tight text-black dark:text-white no-underline flex items-baseline gap-0.5"
           style={{ letterSpacing: "-0.03em" }}
         >
           Putri Wulandari<span className="text-accent">.</span>
@@ -70,9 +70,9 @@ export default function Navbar() {
                 key={href}
                 href={href}
                 className={`px-3.5 py-1.5 rounded-pill text-[13px] font-medium no-underline transition-all duration-200 ${
-                  active 
-                    ? "bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] text-ink dark:bg-white/10 dark:shadow-none dark:text-white" 
-                    : "text-ink-2 hover:bg-black/5 dark:hover:bg-white/10 hover:text-ink"
+                  active
+                    ? "bg-black text-white dark:bg-white dark:text-black"
+                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-black dark:hover:text-white"
                 }`}
               >
                 {t(key)}
@@ -87,7 +87,7 @@ export default function Navbar() {
           <button
             onClick={toggleLang}
             title="Toggle language"
-            className="hidden sm:flex items-center gap-1 px-3 py-1.5 rounded-pill text-[12px] font-bold tracking-widest text-ink-2 hover:text-ink border border-[var(--border)] hover:border-[var(--fg)] transition-all duration-200 cursor-pointer bg-transparent"
+            className="hidden sm:flex items-center gap-1 px-3 py-1.5 rounded-pill text-[12px] font-bold tracking-widest text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white border border-gray-200 dark:border-gray-700 hover:border-black dark:hover:border-white transition-all duration-200 cursor-pointer bg-transparent"
             style={{ letterSpacing: "0.06em" }}
           >
             <span className={lang === "en" ? "text-ink" : "text-ink-3"}>EN</span>
@@ -99,7 +99,7 @@ export default function Navbar() {
           <button
             onClick={toggleTheme}
             title="Toggle dark mode"
-            className="w-8 h-8 flex items-center justify-center rounded-full border border-[var(--border)] hover:border-[var(--fg)] text-ink-2 hover:text-ink transition-all duration-200 cursor-pointer bg-transparent"
+            className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-200 dark:border-gray-700 hover:border-black dark:hover:border-white text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-all duration-200 cursor-pointer bg-transparent"
             aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
           >
             {theme === "dark" ? (
@@ -137,7 +137,7 @@ export default function Navbar() {
           {/* Mobile hamburger */}
           <button
             onClick={() => setMobileOpen(o => !o)}
-            className="flex md:hidden w-8 h-8 items-center justify-center rounded-full border border-[var(--border)] text-ink-2 hover:text-ink cursor-pointer bg-transparent transition-colors"
+            className="flex md:hidden w-8 h-8 items-center justify-center rounded-full border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white cursor-pointer bg-transparent transition-colors"
             aria-label="Open menu"
           >
             {mobileOpen ? '✕' : '☰'}
@@ -149,10 +149,10 @@ export default function Navbar() {
       {mobileOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
           <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-          <div className="absolute top-0 right-0 h-full w-72 bg-card border-l border-[var(--border)] flex flex-col py-8 px-6 shadow-2xl">
+          <div className="absolute top-0 right-0 h-full w-72 bg-white dark:bg-black border-l border-gray-200 dark:border-gray-800 flex flex-col py-8 px-6 shadow-xl">
             <div className="flex items-center justify-between mb-8">
-              <span className="font-display font-extrabold text-[16px] text-ink">Menu</span>
-              <button onClick={() => setMobileOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full border border-[var(--border)] text-ink-2 cursor-pointer bg-transparent text-sm">✕</button>
+              <span className="font-display font-extrabold text-[16px] text-black dark:text-white">Menu</span>
+              <button onClick={() => setMobileOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer bg-transparent text-sm">✕</button>
             </div>
             <nav className="space-y-1 flex-1">
               {NAV_KEYS.map(({ key, href }) => (
@@ -161,8 +161,8 @@ export default function Navbar() {
                   href={href}
                   className={`flex items-center px-4 py-3 rounded-[12px] text-[14px] font-medium no-underline transition-all ${
                     pathname === href || (href !== "/" && pathname.startsWith(href))
-                      ? "bg-accent-soft text-accent"
-                      : "text-ink-2 hover:bg-card2 hover:text-ink"
+                      ? "bg-black text-white dark:bg-white dark:text-black"
+                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-black dark:hover:text-white"
                   }`}
                 >
                   {t(key)}
