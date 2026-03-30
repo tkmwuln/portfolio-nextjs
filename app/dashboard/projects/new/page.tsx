@@ -53,6 +53,7 @@ export default function NewProjectPage() {
     role: '', tags: '',
   })
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const update = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }))
   const setTitle = (val: string) => {
     const slug = val.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')

@@ -133,7 +133,7 @@ export default function HomeProjectsSection({ projects }: { projects: Project[] 
                 ? [{ metricLabel: "impact", metricValue: String(project.metricValue) }]
                 : []
             }
-            gradient={(project as any).gradient}
+            gradient={project.gradient}
             index={index}
           />
         ))}

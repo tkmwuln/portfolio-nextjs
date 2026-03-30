@@ -37,7 +37,7 @@ export async function POST(request: Request) {
     // Expected: 200 OK + { url: 'https://[ref].supabase.co/storage/v1/...' }
     return NextResponse.json({ url: publicUrlData.publicUrl }, { status: 200 });
 
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'Unknown error' }, { status: 500 });
   }
 }

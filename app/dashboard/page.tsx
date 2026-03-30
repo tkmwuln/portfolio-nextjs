@@ -40,8 +40,11 @@ const SIDEBAR_ITEMS = [
 export default function DashboardPage() {
   const router = useRouter()
   const supabase = createClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [user, setUser] = useState<any>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [projects, setProjects] = useState<any[]>(STATIC_PROJECTS)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [posts, setPosts] = useState<any[]>(STATIC_POSTS)
   const [loading, setLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)

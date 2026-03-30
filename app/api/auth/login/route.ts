@@ -35,9 +35,9 @@ export async function POST(request: Request) {
         email: data.user.email,
       },
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     return NextResponse.json(
-      { error: err.message || 'Internal Server Error' },
+      { error: err instanceof Error ? err.message : 'Internal Server Error' },
       { status: 500 }
     );
   }

@@ -26,8 +26,8 @@ export async function GET(request: Request) {
 
     // Expected: 200 OK + array projects yang berstatus published
     return NextResponse.json(data);
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'Unknown error' }, { status: 500 });
   }
 }
 
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     const supabase = createClient(cookieStore);
     
     // Check if user is logged in (authorized to create via cms_token equivalent)
-    const { data: { user } } = await supabase.auth.getUser();
+    await supabase.auth.getUser();
     
     // We proceed even if no user to map to curriculum's raw REST style,
     // but a real app would strictly block here.
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
 
     // Expected response: 201 Created + data project baru
     return NextResponse.json(data, { status: 201 });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'Unknown error' }, { status: 500 });
   }
 }
