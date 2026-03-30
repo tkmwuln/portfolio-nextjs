@@ -150,9 +150,10 @@ export default function Navbar() {
       </nav>
 
       {/* Mobile Menu Drawer */}
-      <div className={`fixed inset-0 z-40 md:hidden transition-all duration-300 ease-out ${mobileOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-        <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-        <div className={`absolute top-0 right-0 h-full w-72 bg-white dark:bg-black border-l border-gray-200 dark:border-gray-800 flex flex-col py-8 px-6 shadow-xl transition-transform duration-300 ease-out ${mobileOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      {mobileOpen ? (
+        <div className="fixed inset-0 z-40 md:hidden animate-fade-in">
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
+          <div className="absolute top-0 right-0 h-full w-72 bg-white dark:bg-black border-l border-gray-200 dark:border-gray-800 flex flex-col py-8 px-6 shadow-xl animate-slide-in-right">
             <div className="flex items-center justify-between mb-8">
               <span className="font-display font-extrabold text-[16px] text-black dark:text-white">Menu</span>
               <button onClick={() => setMobileOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer bg-transparent text-sm">✕</button>
@@ -185,10 +186,9 @@ export default function Navbar() {
                 <div className="nav-available justify-center">{t("nav.open_to_work")}</div>
               )}
             </div>
-            </div>
           </div>
         </div>
-      </div>
+      ) : null}
     </>
   );
 }
