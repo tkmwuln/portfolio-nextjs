@@ -20,47 +20,52 @@ const variantStyles: Record<MetricItem["variant"], string> = {
 export default function BentoMetrics({ metrics }: BentoMetricsProps) {
   return (
     <div className="bento bento-metrics">
-      {metrics.slice(0, 4).map((m, i) => (
-        <div
-          key={`${m.label}-${i}`}
-          className={`rounded-card p-6 shadow-card relative overflow-hidden flex flex-col justify-between cursor-pointer transition-transform duration-200 hover:-translate-y-1 ${variantStyles[m.variant]}`}
-        >
-          <p
-            className={`label uppercase tracking-wider ${
-              m.variant === "blue"
-                ? "text-white/75"
-                : m.variant === "light"
-                  ? "text-ink-3"
-                  : "text-white/60"
-            }`}
-          >
-            {m.label}
-          </p>
+      {metrics.slice(0, 4).map((m, i) => {
+        const isBlue = m.variant === "blue";
+        const isLight = m.variant === "light";
 
-          <div>
-            <div className="font-display text-[48px] font-extrabold tracking-tighter leading-none">
-              {m.value}
-            </div>
-            {m.sub && (
-              <p className={`text-[11px] mt-1 ${m.variant === "light" ? "text-ink-3" : "text-white/50"}`}>
-                {m.sub}
-              </p>
-            )}
-          </div>
-
+        return (
           <div
-            className={`absolute top-5 right-5 w-8 h-8 rounded-full flex items-center justify-center text-sm ${
-              m.variant === "blue"
-                ? "bg-white/20 text-white ring-1 ring-white/25"
-                : m.variant === "light"
-                  ? "bg-accent-soft text-accent"
-                  : "bg-white/15 text-white"
-            }`}
+            key={`${m.label}-${i}`}
+            className={`rounded-card p-6 shadow-card relative overflow-hidden flex flex-col justify-between cursor-pointer transition-transform duration-200 hover:-translate-y-1 ${variantStyles[m.variant]}`}
           >
-            ↗
+            <p
+              className={`label uppercase tracking-wider ${
+                isBlue
+                  ? "text-white/75"
+                  : isLight
+                    ? "text-ink-3"
+                    : "text-white/60"
+              }`}
+            >
+              {m.label}
+            </p>
+
+            <div>
+              <div className="font-display text-[48px] font-extrabold tracking-tighter leading-none">
+                {m.value}
+              </div>
+              {m.sub && (
+                <p className={`text-[11px] mt-1 ${isLight ? "text-ink-3" : "text-white/50"}`}>
+                  {m.sub}
+                </p>
+              )}
+            </div>
+
+            <div
+              className={`absolute top-5 right-5 w-8 h-8 rounded-full flex items-center justify-center text-sm ${
+                isBlue
+                  ? "bg-white/20 text-white ring-1 ring-white/25"
+                  : isLight
+                    ? "bg-accent-soft text-accent"
+                    : "bg-white/15 text-white"
+              }`}
+            >
+              ↗
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
