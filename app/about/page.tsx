@@ -3,7 +3,11 @@ import { prisma } from '@/lib/prisma'
 
 async function getProfileData() {
   try {
-    const user = await prisma.user.findFirst({});
+    const user = await prisma.user.findFirst({
+      include: {
+        skills: true
+      }
+    });
     return user;
   } catch (error) {
     console.error("Failed to fetch profile data:", error);

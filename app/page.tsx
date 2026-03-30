@@ -5,9 +5,7 @@ import ProjectCard from './components/portfolio/ProjectCard'
 import BentoMetrics, { defaultMetrics } from './components/sections/BentoMetrics'
 import HeroSection from './components/sections/HeroSection'
 import HomeProjectsSection from './components/sections/HomeProjectsSection'
-import { PrismaClient } from './generated/prisma/client'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/lib/prisma'
 
 export default async function HomePage() {
   try {

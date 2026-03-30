@@ -16,6 +16,8 @@ model User {
   name      String?
   bio       String?
   avatar    String?
+  headline  String?
+  location  String?
   website   String?
   github    String?
   linkedin  String?
