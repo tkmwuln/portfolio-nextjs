@@ -2,6 +2,8 @@ import { prisma } from '@/lib/prisma';
 import PortfolioClient from './PortfolioClient';
 import { STATIC_PROJECTS } from '@/lib/projects';
 
+export const dynamic = 'force-dynamic';
+
 export default async function PortfolioPage() {
   let dbProjects: typeof STATIC_PROJECTS = [];
 
