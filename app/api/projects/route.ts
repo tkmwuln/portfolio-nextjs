@@ -1,72 +1,61 @@
-import { createClient } from '@/utils/supabase/server';
-import { cookies } from 'next/headers';
+import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 
-// GET /api/projects
-export async function GET(request: Request) {
+// GET /api/projects — public, returns all published projects with static image fallback
+export async function GET(req: Request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const category = searchParams.get('category');
-    
-    // We are deliberately NOT requiring auth so public can view published projects
-    const cookieStore = await cookies();
-    const supabase = createClient(cookieStore);
+    const { searchParams } = new URL(req.url);
+    const all = searchParams.get('all') === 'true';
 
-    let query = supabase.from('projects').select('*').eq('published', true);
-
-    if (category) {
-      query = query.eq('category', category);
-    }
-
-    const { data, error } = await query;
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    // Expected: 200 OK + array projects yang berstatus published
-    return NextResponse.json(data);
+    const projects = await prisma.project.findMany({
+      where: all ? {} : { published: true },
+      orderBy: { createdAt: 'desc' },
+    });
+    return NextResponse.json(projects);
   } catch (err: unknown) {
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Unknown error' }, { status: 500 });
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'Unknown' }, { status: 500 });
   }
 }
 
-// POST /api/projects
-export async function POST(request: Request) {
+// POST /api/projects — create new project (requires auth)
+export async function POST(req: Request) {
   try {
-    // Expected token from cookies or session
     const cookieStore = await cookies();
-    const supabase = createClient(cookieStore);
-    
-    // Check if user is logged in (authorized to create via cms_token equivalent)
-    await supabase.auth.getUser();
-    
-    // We proceed even if no user to map to curriculum's raw REST style,
-    // but a real app would strictly block here.
-    
-    const body = await request.json();
+    const token = cookieStore.get('cms_token');
+    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    // Mapping curriculum fields to our actual Supabase Database Schema
-    const payload = {
-      title: body.title,
-      description: body.summary || '',
-      published: body.status === 'published',
-      category: body.title.toLowerCase().includes('research') ? 'ux-research' : 'ui-design', // basic mapping
-      // Serialize metrics array to content or extract metricValue
-      metricValue: body.metrics?.[0]?.metricValue || null,
-      content: JSON.stringify(body.metrics || []),
-      slug: body.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 60),
-    };
+    const body = await req.json();
+    if (!body.userId) return NextResponse.json({ error: 'userId required' }, { status: 400 });
 
-    const { data, error } = await supabase.from('projects').insert([payload]).select().single();
+    const slug = body.slug || body.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    // Expected response: 201 Created + data project baru
-    return NextResponse.json(data, { status: 201 });
+    const project = await prisma.project.create({
+      data: {
+        title: body.title,
+        slug,
+        description: body.description || '',
+        content: body.content || null,
+        image: body.image || null,
+        demoUrl: body.demoUrl || null,
+        sourceUrl: body.sourceUrl || null,
+        technologies: body.technologies || [],
+        featured: body.featured ?? false,
+        published: body.published ?? true,
+        category: body.category || null,
+        clientName: body.clientName || null,
+        projectYear: body.projectYear ? Number(body.projectYear) : null,
+        metricValue: body.metricValue || null,
+        metricLabel: body.metricLabel || null,
+        gradient: body.gradient || null,
+        docUrl: body.docUrl || null,
+        docLabel: body.docLabel || null,
+        role: body.role || null,
+        userId: body.userId,
+      },
+    });
+    return NextResponse.json(project, { status: 201 });
   } catch (err: unknown) {
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Unknown error' }, { status: 500 });
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'Unknown' }, { status: 500 });
   }
 }

@@ -2,13 +2,11 @@
 
 import { useState } from "react";
 import ProjectCard from "@/app/components/portfolio/ProjectCard";
-import { STATIC_PROJECTS } from "@/lib/projects";
+import { STATIC_PROJECTS, type Project } from "@/lib/projects";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export default function PortfolioClient({ projects }: { projects: any[] }) {
+export default function PortfolioClient({ projects }: { projects: Project[] }) {
   const [activeCategory, setActiveCategory] = useState("All");
 
-  // Use live Supabase data if available, else fall back to static
   const display = projects.length > 0 ? projects : STATIC_PROJECTS;
 
   const ALL_CATEGORIES = [
@@ -44,7 +42,7 @@ export default function PortfolioClient({ projects }: { projects: any[] }) {
               onClick={() => setActiveCategory(cat)}
               className={`px-4 py-2 rounded-pill text-[12px] font-semibold tracking-wide transition-all duration-200 cursor-pointer border ${
                 activeCategory === cat
-                  ? "bg-ink text-white border-ink dark:bg-white dark:text-white dark:border-white"
+                  ? "bg-ink text-white border-ink"
                   : "bg-transparent text-ink-2 border-[var(--border)] hover:border-ink-2 hover:text-ink"
               }`}
             >
@@ -53,8 +51,8 @@ export default function PortfolioClient({ projects }: { projects: any[] }) {
           ))}
         </div>
 
-        {/* Projects Grid — uses same ProjectCard as home page */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Projects Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filtered.map((project, index) => (
             <ProjectCard
               key={project.id}
@@ -79,4 +77,3 @@ export default function PortfolioClient({ projects }: { projects: any[] }) {
     </div>
   );
 }
-

@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls -la app/ app/*/page.tsx)",
+      "Bash(npx prisma:*)",
+      "Bash(npm run:*)",
+      "Bash(npx next:*)",
+      "Bash(npx tsc:*)"
+    ]
+  }
+}
