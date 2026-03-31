@@ -9,8 +9,9 @@ export async function GET(req: Request) {
     const all = searchParams.get('all') === 'true';
 
     const projects = await prisma.project.findMany({
-      where: all ? {} : { published: true },
+      where: all ? {} : { status: 'published' },
       orderBy: { createdAt: 'desc' },
+      include: { category: true, metrics: true, images: true }
     });
     return NextResponse.json(projects);
   } catch (err: unknown) {
@@ -34,24 +35,15 @@ export async function POST(req: Request) {
       data: {
         title: body.title,
         slug,
-        description: body.description || '',
+        summary: body.description || '',
         content: body.content || null,
-        image: body.image || null,
-        demoUrl: body.demoUrl || null,
-        sourceUrl: body.sourceUrl || null,
-        technologies: body.technologies || [],
-        featured: body.featured ?? false,
-        published: body.published ?? true,
-        category: body.category || null,
+        coverImageUrl: body.image || null,
+        status: body.published ? 'published' : 'draft',
+        category: body.categoryId ? { connect: { id: body.categoryId } } : undefined,
         clientName: body.clientName || null,
         projectYear: body.projectYear ? Number(body.projectYear) : null,
-        metricValue: body.metricValue || null,
-        metricLabel: body.metricLabel || null,
-        gradient: body.gradient || null,
-        docUrl: body.docUrl || null,
-        docLabel: body.docLabel || null,
         role: body.role || null,
-        userId: body.userId,
+        createdBy: body.userId,
       },
     });
     return NextResponse.json(project, { status: 201 });

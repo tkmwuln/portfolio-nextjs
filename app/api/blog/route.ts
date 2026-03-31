@@ -9,7 +9,7 @@ export async function GET(req: Request) {
     const all = searchParams.get('all') === 'true';
 
     const posts = await prisma.blogPost.findMany({
-      where: all ? {} : { published: true },
+      where: all ? {} : { status: 'published' },
       include: { tags: true },
       orderBy: { createdAt: 'desc' },
     });
@@ -36,14 +36,17 @@ export async function POST(req: Request) {
         slug: body.slug || body.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
         excerpt: body.excerpt || null,
         content: body.content || '',
-        published: body.published ?? false,
-        userId,
+        status: body.published ? 'published' : 'draft',
+        authorId: userId,
         tags: body.tags?.length
           ? {
-              connectOrCreate: (body.tags as string[]).map((name: string) => ({
-                where: { name },
-                create: { name },
-              })),
+              connectOrCreate: (body.tags as string[]).map((name: string) => {
+                const tagSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                return {
+                  where: { name },
+                  create: { name, slug: tagSlug },
+                };
+              }),
             }
           : undefined,
       },

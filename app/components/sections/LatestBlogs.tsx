@@ -13,6 +13,7 @@ type BlogPost = {
   title: string;
   createdAt: string | Date;
   gradient?: string | null;
+  coverImage?: string | null;
   tags?: { id: string; name: string }[];
   readTime?: string | null;
   excerpt?: string | null;
@@ -130,23 +131,31 @@ function BlogSliderItem({ post, index }: { post: BlogPost; index: number }) {
       className="group flex-none no-underline"
       style={{ width: "260px", scrollSnapAlign: "start" }}
     >
-      {/* Square gradient thumbnail */}
+      {/* Thumbnail */}
       <div
-        className="w-full rounded-2xl overflow-hidden mb-4 flex items-center justify-center relative"
-        style={{ height: "200px", background: bg }}
+        className="w-full rounded-2xl overflow-hidden mb-4 flex items-center justify-center relative bg-[#121421]"
+        style={{ height: "200px" }}
       >
-        {/* Subtle overlay */}
+        {post.coverImage ? (
+          <img
+            src={post.coverImage}
+            alt={post.title}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center" style={{ background: bg }}>
+            <span
+              className="font-display text-[64px] font-extrabold select-none transition-transform duration-400 group-hover:scale-110"
+              style={{ color: "rgba(255,255,255,0.09)", lineHeight: 1 }}
+            >
+              {post.title.slice(0, 2).toUpperCase()}
+            </span>
+          </div>
+        )}
         <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors duration-300" />
-        {/* Big initials watermark */}
-        <span
-          className="font-display text-[64px] font-extrabold select-none transition-transform duration-400 group-hover:scale-105"
-          style={{ color: "rgba(255,255,255,0.09)", lineHeight: 1 }}
-        >
-          {post.title.slice(0, 2).toUpperCase()}
-        </span>
         {/* Tag badge */}
         {tag && (
-          <span className="absolute bottom-3 left-3 text-[10px] text-white/80 bg-black/30 backdrop-blur-sm px-2.5 py-1 rounded-full font-semibold tracking-wide uppercase">
+          <span className="absolute bottom-3 left-3 text-[10px] text-white/80 bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-full font-semibold tracking-wide uppercase border border-white/10">
             {tag}
           </span>
         )}

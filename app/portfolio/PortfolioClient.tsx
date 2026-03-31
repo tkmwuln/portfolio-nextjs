@@ -40,10 +40,8 @@ export default function PortfolioClient({ projects }: { projects: Project[] }) {
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className={`px-4 py-2 rounded-pill text-[12px] font-semibold tracking-wide transition-all duration-200 cursor-pointer border ${
-                activeCategory === cat
-                  ? "bg-ink text-white border-ink"
-                  : "bg-transparent text-ink-2 border-[var(--border)] hover:border-ink-2 hover:text-ink"
+              className={`px-4 py-1.5 rounded-pill text-[12px] font-semibold tracking-wide transition-all duration-200 cursor-pointer border ${
+                activeCategory === cat ? "pill-active" : "pill-inactive"
               }`}
             >
               {cat}

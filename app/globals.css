@@ -161,7 +161,25 @@
   .btn-primary:hover {
     background: var(--accent);
     color: white;
-    transform: translateY(-1px);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+
+  .pill-active {
+    background: var(--fg);
+    color: var(--page-bg);
+    border-color: var(--fg);
+  }
+
+  .pill-inactive {
+    background: transparent;
+    color: var(--fg2);
+    border-color: var(--border);
+  }
+
+  .pill-inactive:hover {
+    border-color: var(--fg2);
+    color: var(--fg);
   }
 
   .btn-ghost {
