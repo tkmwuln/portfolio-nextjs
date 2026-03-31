@@ -4,23 +4,13 @@ import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-
-// Pre-synced project data matching /portfolio page
-const STATIC_PROJECTS = [
-  { id: 's1', title: 'E-Health Platform — SIMRS Kesehatan', slug: 'simrs-kesehatan', published: true, featured: true, category: 'Govtech · E-Health', clientName: 'Telkom Indonesia', metricValue: '50k+ MAU', projectYear: 2024 },
-  { id: 's2', title: 'Strategic CX Platform', slug: 'cx-platform', published: true, featured: true, category: 'B2B SaaS', clientName: 'Telkom Indonesia', metricValue: '+38%', projectYear: 2023 },
-  { id: 's3', title: 'Government Procurement UX', slug: 'lkpp-procurement', published: true, featured: false, category: 'Govtech', clientName: 'LKPP', metricValue: '10M+ Users', projectYear: 2024 },
-  { id: 's4', title: 'Fintech Onboarding — D7 Retention', slug: 'fintech-onboarding', published: true, featured: false, category: 'Fintech', clientName: 'WeekndLabs Studio', metricValue: '+61%', projectYear: 2022 },
-  { id: 's5', title: 'Design System — 200+ Components', slug: 'design-system', published: true, featured: false, category: 'Design System', clientName: 'WeekndLabs Studio', metricValue: '200+', projectYear: 2021 },
-  { id: 's6', title: 'INA DIGITAL — National Identity Platform', slug: 'ina-digital', published: true, featured: false, category: 'Govtech', clientName: 'INA DIGITAL', metricValue: 'National Scale', projectYear: 2025 },
-  { id: 's7', title: 'Blockchain Service Design', slug: 'blockchain-service', published: false, featured: false, category: 'Blockchain', clientName: 'WeekndLabs Studio', metricValue: '3 Products', projectYear: 2023 },
-  { id: 's8', title: 'EMR & Vaccination Ecosystem', slug: 'emr-vaccination', published: true, featured: false, category: 'E-Health', clientName: 'Telkom Indonesia', metricValue: 'Satu Sehat', projectYear: 2024 },
-]
+import Image from 'next/image'
+import { STATIC_PROJECTS } from '@/lib/projects'
 
 type Project = {
   id: string; title: string; slug: string | null; published: boolean;
   featured: boolean; category?: string; clientName?: string;
-  metricValue?: string | null; projectYear?: number;
+  metricValue?: string | null; projectYear?: number; image?: string | null;
 }
 
 const SIDEBAR = [
@@ -135,6 +125,7 @@ export default function AdminProjectsPage() {
             <table className="w-full text-[13px]">
               <thead>
                 <tr className="border-b border-[var(--border)]">
+                  <th className="text-left px-4 py-3 text-ink-3 font-semibold tracking-wider text-[11px] uppercase w-10"></th>
                   <th className="text-left px-5 py-3 text-ink-3 font-semibold tracking-wider text-[11px] uppercase">Project</th>
                   <th className="text-left px-4 py-3 text-ink-3 font-semibold tracking-wider text-[11px] uppercase">Category</th>
                   <th className="text-left px-4 py-3 text-ink-3 font-semibold tracking-wider text-[11px] uppercase">Metric</th>
@@ -146,6 +137,17 @@ export default function AdminProjectsPage() {
               <tbody>
                 {filtered.map((p) => (
                   <tr key={p.id} className="border-b border-[var(--border)] hover:bg-card2 transition-colors duration-150 last:border-0">
+                    <td className="px-4 py-3">
+                      <div className="w-10 h-10 rounded-[8px] overflow-hidden bg-card2 border border-[var(--border)] shrink-0 relative">
+                        {p.image ? (
+                          <Image src={p.image} alt={p.title} fill className="object-cover" />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center text-[10px] text-ink-3 font-bold">
+                            {p.title?.slice(0, 2).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-5 py-3.5">
                       <div>
                         <p className="font-semibold text-ink">{p.title}</p>

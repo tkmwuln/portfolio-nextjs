@@ -7,6 +7,9 @@ import HeroSection from './components/sections/HeroSection'
 import HomeProjectsSection from './components/sections/HomeProjectsSection'
 import { prisma } from '@/lib/prisma'
 
+// Uses cookies() for Supabase session — must be dynamic
+export const dynamic = 'force-dynamic'
+
 export default async function HomePage() {
   try {
     const cookieStore = await cookies()

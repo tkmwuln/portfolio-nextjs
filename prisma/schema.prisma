@@ -33,18 +33,30 @@ model User {
 }
 
 model Project {
-  id          String   @id @default(cuid())
-  title       String
-  description String
-  content     String?  @db.Text
-  image       String?
-  demoUrl     String?
-  sourceUrl   String?
+  id           String   @id @default(cuid())
+  title        String
+  slug         String?  @unique
+  description  String
+  content      String?  @db.Text
+  image        String?
+  demoUrl      String?
+  sourceUrl    String?
   technologies String[]
-  featured    Boolean  @default(false)
-  published   Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  featured     Boolean  @default(false)
+  published    Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Portfolio-specific fields
+  category     String?
+  clientName   String?
+  projectYear  Int?
+  metricValue  String?
+  metricLabel  String?
+  gradient     String?
+  docUrl       String?
+  docLabel     String?
+  role         String?
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)

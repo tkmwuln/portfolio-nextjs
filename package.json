@@ -6,7 +6,8 @@
     "dev": "sh -c 'pkill -f \"/Users/wulsmac/portfolio-website/node_modules/.bin/next dev\" 2>/dev/null || true; next dev'",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed:projects": "npx tsx scripts/seed-projects.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.6.0",

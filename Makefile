@@ -57,7 +57,10 @@ db-generate: ## Generate Prisma client
 db-studio: ## Open Prisma Studio database browser
 	@npx prisma studio
 
-db-seed: ## Seed database with sample data
+db-seed: ## Seed database with portfolio projects (via Prisma)
+	@npx tsx scripts/seed-projects.ts
+
+db-seed-sample: ## Seed database with sample data (dev only)
 	@node add-sample-data.js
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -90,4 +93,4 @@ help: ## Show this help message
 	@echo ""
 	@echo "Usage: make [command]"
 
-.PHONY: dev dev-turbo build start clean lint lint-fix typecheck check db-push db-generate db-studio db-seed install update outdated reset help
+.PHONY: dev dev-turbo build start clean lint lint-fix typecheck check db-push db-generate db-studio db-seed db-seed-sample install update outdated reset help

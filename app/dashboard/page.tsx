@@ -4,18 +4,8 @@ import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { STATIC_PROJECTS } from '@/lib/projects'
 
-// Synced with /dashboard/projects static data
-const STATIC_PROJECTS = [
-  { id: 's1', title: 'E-Health Platform — SIMRS Kesehatan', slug: 'simrs-kesehatan', published: true, featured: true },
-  { id: 's2', title: 'Strategic CX Platform', slug: 'cx-platform', published: true, featured: true },
-  { id: 's3', title: 'Government Procurement UX', slug: 'lkpp-procurement', published: true, featured: false },
-  { id: 's4', title: 'Fintech Onboarding — D7 Retention', slug: 'fintech-onboarding', published: true, featured: false },
-  { id: 's5', title: 'Design System — 200+ Components', slug: 'design-system', published: true, featured: false },
-  { id: 's6', title: 'INA DIGITAL — National Identity Platform', slug: 'ina-digital', published: true, featured: false },
-  { id: 's7', title: 'Blockchain Service Design', slug: 'blockchain-service', published: false, featured: false },
-  { id: 's8', title: 'EMR & Vaccination Ecosystem', slug: 'emr-vaccination', published: true, featured: false },
-]
 
 const STATIC_POSTS = [
   { id: 'b1', title: 'How Cognitive Psychology Transformed Our Fintech Onboarding', slug: 'cognitive-psychology-fintech-onboarding', published: true },
