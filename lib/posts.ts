@@ -14,6 +14,7 @@ export type StaticPost = {
   createdAt: string;
   readTime: string;
   gradient: string;
+  coverImage?: string | null;
   published: boolean;
 };
 
@@ -31,6 +32,7 @@ export const STATIC_POSTS: StaticPost[] = [
     createdAt: '2024-03-15',
     readTime: '5 min read',
     gradient: 'linear-gradient(140deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+    coverImage: '/images/blog-cognitive-fintech.png',
     published: true,
   },
   {
@@ -46,6 +48,7 @@ export const STATIC_POSTS: StaticPost[] = [
     createdAt: '2024-02-28',
     readTime: '7 min read',
     gradient: 'linear-gradient(140deg, #4b1248 0%, #f0c27b 100%)',
+    coverImage: '/images/blog-government-ux.png',
     published: true,
   },
   {
@@ -61,6 +64,7 @@ export const STATIC_POSTS: StaticPost[] = [
     createdAt: '2024-01-20',
     readTime: '9 min read',
     gradient: 'linear-gradient(140deg, #1a1c2c 0%, #4a192c 100%)',
+    coverImage: '/images/blog-design-system.png',
     published: true,
   },
   {
@@ -76,6 +80,7 @@ export const STATIC_POSTS: StaticPost[] = [
     createdAt: '2024-01-05',
     readTime: '6 min read',
     gradient: 'linear-gradient(140deg, #0f2027 0%, #203a43 50%, #2c5364 100%)',
+    coverImage: '/images/blog-service-design.png',
     published: true,
   },
   {
@@ -91,6 +96,7 @@ export const STATIC_POSTS: StaticPost[] = [
     createdAt: '2023-12-10',
     readTime: '8 min read',
     gradient: 'linear-gradient(140deg, #141e30 0%, #243b55 100%)',
+    coverImage: '/images/blog-ai-product.png',
     published: true,
   },
 ];
