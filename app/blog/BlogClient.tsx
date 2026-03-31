@@ -9,7 +9,20 @@ function formatDate(dateStr: string | Date) {
   });
 }
 
-export default function BlogClient({ posts }: { posts: any[] }) {
+type Tag = { id: string; name: string };
+type BlogPost = {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt?: string | null;
+  category?: string | null;
+  gradient?: string | null;
+  readTime?: string | null;
+  createdAt: string | Date;
+  tags?: Tag[];
+};
+
+export default function BlogClient({ posts }: { posts: BlogPost[] }) {
   const [activeCategory, setActiveCategory] = useState("All");
 
   const ALL_CATS = ["All", ...Array.from(new Set(posts.map((p) => p.category || "Uncategorized")))];
@@ -65,7 +78,7 @@ export default function BlogClient({ posts }: { posts: any[] }) {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/5 to-transparent" />
                 <div className="relative z-10 p-6 w-full flex items-end justify-between">
                   <div>
-                    {(filtered[0].tags || []).map((t: any) => (
+                    {(filtered[0].tags || []).map((t: Tag) => (
                       <span key={t.id} className="text-[10px] bg-white/20 text-white/80 px-2.5 py-1 rounded-pill font-semibold tracking-wider uppercase backdrop-blur-sm mr-1.5">
                         {t.name}
                       </span>
@@ -127,7 +140,7 @@ export default function BlogClient({ posts }: { posts: any[] }) {
                   {post.excerpt}
                 </p>
                 <div className="flex flex-wrap gap-1">
-                  {(post.tags || []).slice(0, 2).map((tag: any) => (
+                  {(post.tags || []).slice(0, 2).map((tag: Tag) => (
                     <span key={tag.id} className="text-[10px] text-ink-3 bg-card2 px-2 py-0.5 rounded-full border border-[var(--border)]">
                       {tag.name}
                     </span>
