@@ -1,3 +1,4 @@
+import { createClient } from '@/utils/supabase/server';
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
@@ -6,7 +7,10 @@ import { cookies } from 'next/headers';
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   try {
-    const project = await prisma.project.findUnique({ where: { id } });
+    const project = await prisma.project.findUnique({
+       where: { id },
+       include: { category: true, metrics: true, images: true }
+    });
     if (!project) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return NextResponse.json(project);
   } catch (err: unknown) {
@@ -19,8 +23,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   const { id } = await params;
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get('cms_token');
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const supabase = createClient(cookieStore);
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
     const project = await prisma.project.update({
@@ -28,22 +34,13 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       data: {
         title: body.title,
         slug: body.slug,
-        description: body.description,
+        summary: body.description || body.summary,
         content: body.content,
-        image: body.image,
-        category: body.category,
+        coverImageUrl: body.image || body.coverImageUrl,
+        status: body.published ? 'published' : 'draft',
         clientName: body.clientName,
         projectYear: body.projectYear ? Number(body.projectYear) : null,
-        metricValue: body.metricValue,
-        metricLabel: body.metricLabel,
-        gradient: body.gradient,
-        demoUrl: body.demoUrl,
-        sourceUrl: body.sourceUrl,
-        docUrl: body.docUrl,
-        docLabel: body.docLabel,
         role: body.role,
-        technologies: body.technologies ?? [],
-        published: body.published ?? true,
         featured: body.featured ?? false,
       },
     });
@@ -58,8 +55,10 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   const { id } = await params;
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get('cms_token');
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const supabase = createClient(cookieStore);
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     await prisma.project.delete({ where: { id } });
     return NextResponse.json({ success: true });

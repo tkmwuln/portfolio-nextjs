@@ -1,3 +1,4 @@
+import { createClient } from '@/utils/supabase/server';
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
@@ -22,8 +23,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   const { id } = await params;
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get('cms_token');
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const supabase = createClient(cookieStore);
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
     const post = await prisma.blogPost.update({
@@ -33,14 +36,17 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         slug: body.slug,
         excerpt: body.excerpt || null,
         content: body.content || '',
-        published: body.published ?? false,
+        status: body.published ? 'published' : 'draft',
         tags: body.tags?.length
           ? {
               set: [],
-              connectOrCreate: (body.tags as string[]).map((name: string) => ({
-                where: { name },
-                create: { name },
-              })),
+              connectOrCreate: (body.tags as string[]).map((name: string) => {
+                const tagSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                return {
+                  where: { name },
+                  create: { name, slug: tagSlug },
+                };
+              }),
             }
           : { set: [] },
       },
@@ -57,8 +63,10 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   const { id } = await params;
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get('cms_token');
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const supabase = createClient(cookieStore);
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     await prisma.blogPost.delete({ where: { id } });
     return NextResponse.json({ success: true });

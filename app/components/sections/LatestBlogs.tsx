@@ -143,14 +143,7 @@ function BlogSliderItem({ post, index }: { post: BlogPost; index: number }) {
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center" style={{ background: bg }}>
-            <span
-              className="font-display text-[64px] font-extrabold select-none transition-transform duration-400 group-hover:scale-110"
-              style={{ color: "rgba(255,255,255,0.09)", lineHeight: 1 }}
-            >
-              {post.title.slice(0, 2).toUpperCase()}
-            </span>
-          </div>
+          <div className="absolute inset-0" style={{ background: bg }} />
         )}
         <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors duration-300" />
         {/* Tag badge */}

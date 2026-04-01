@@ -1,8 +1,9 @@
+import { createClient } from '@/utils/supabase/server';
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
-// GET /api/projects — public, returns all published projects with static image fallback
+// GET /api/projects — public
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -23,11 +24,13 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get('cms_token');
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const supabase = createClient(cookieStore);
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
-    if (!body.userId) return NextResponse.json({ error: 'userId required' }, { status: 400 });
+    const userId = user.id;
 
     const slug = body.slug || body.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
@@ -43,7 +46,7 @@ export async function POST(req: Request) {
         clientName: body.clientName || null,
         projectYear: body.projectYear ? Number(body.projectYear) : null,
         role: body.role || null,
-        createdBy: body.userId,
+        createdBy: userId,
       },
     });
     return NextResponse.json(project, { status: 201 });
