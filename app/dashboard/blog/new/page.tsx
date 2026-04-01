@@ -133,31 +133,32 @@ function BlogFormInner() {
     setSaving(false)
   }
 
-  const wordCount = form.content.trim() ? form.content.trim().split(/\s+/).length : 0
 
   return (
-    <div className="min-h-screen bg-[#f8f9fc] flex flex-col md:flex-row">
+    <div className="min-h-screen bg-[#f1f5f9] flex flex-col md:flex-row font-body text-[#0f172a]">
       <Sidebar />
 
-      <main className="flex-1 p-6 md:p-10">
+      <main className="flex-1 p-8 md:p-12 overflow-y-auto">
         {/* Top Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
-            <Link href="/dashboard/blog" className="text-ink-3 hover:text-ink text-[13px] no-underline">← Blog</Link>
-            <h1 className="font-display text-[24px] font-bold text-ink">New Post</h1>
+        <div className="flex items-center justify-between mb-10">
+          <div className="flex items-center gap-4">
+            <Link href="/dashboard/blog" className="flex items-center gap-2 text-[#94a3b8] hover:text-[#475569] text-[14px] font-medium transition-colors no-underline">
+              <span className="text-[18px]">←</span> Blog
+            </Link>
+            <h1 className="font-display text-[28px] font-bold text-[#0f172a] tracking-tight">New Post</h1>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <button 
               onClick={() => handleSave(false)} 
               disabled={saving}
-              className="px-5 py-2 rounded-[10px] text-[13px] font-semibold text-ink-2 bg-white border border-[var(--border)] hover:bg-card2 transition-all disabled:opacity-50"
+              className="px-6 py-2.5 rounded-full text-[14px] font-semibold text-[#475569] bg-white border border-[#e2e8f0] hover:bg-[#f8fafc] hover:border-[#cbd5e1] transition-all shadow-sm flex items-center gap-2 cursor-pointer disabled:opacity-50"
             >
-              📝 Save Draft
+              📄 Save Draft
             </button>
             <button 
               onClick={() => handleSave(true)} 
               disabled={saving}
-              className="px-6 py-2 rounded-[10px] text-[13px] font-bold text-white bg-ink hover:opacity-90 transition-all flex items-center gap-2 disabled:opacity-50"
+              className="px-8 py-2.5 rounded-full text-[14px] font-bold text-white bg-[#0f172a] hover:bg-[#1e293b] transition-all flex items-center gap-2 shadow-md shadow-slate-200 cursor-pointer disabled:opacity-50"
             >
               🚀 Publish
             </button>
@@ -165,20 +166,20 @@ function BlogFormInner() {
         </div>
 
         {msg && (
-          <div className={`mb-6 px-4 py-3 rounded-[12px] text-[13px] font-medium border animate-in fade-in slide-in-from-top-2 ${msg.type === 'success' ? 'bg-[#f0fdf4] text-[#16a34a] border-[#bcf0da]' : 'bg-[#fef2f2] text-[#dc2626] border-[#fecaca]'}`}>
-            {msg.text}
+          <div className={`mb-8 px-6 py-4 rounded-2xl text-[14px] font-medium border animate-in fade-in slide-in-from-top-4 ${msg.type === 'success' ? 'bg-[#f0fdf4] text-[#16a34a] border-[#bcf0da]' : 'bg-[#fef2f2] text-[#dc2626] border-[#fecaca]'}`}>
+            {msg.type === 'success' ? '✨ ' : '⚠️ '}{msg.text}
           </div>
         )}
 
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex flex-col lg:flex-row gap-10">
           {/* Main Content Area */}
-          <div className="flex-1 space-y-6">
+          <div className="flex-1 space-y-8">
             
             {/* Title Section */}
-            <div className="bg-white rounded-[16px] border border-[var(--border)] p-6 shadow-sm">
-              <div className="flex justify-between items-center mb-3">
-                <label className="text-[10px] font-bold text-ink-3 uppercase tracking-widest">Title</label>
-                <button className="text-[11px] font-bold text-accent flex items-center gap-1 hover:opacity-70 bg-transparent border-0 cursor-pointer">
+            <div className="bg-white rounded-[24px] border border-[#e2e8f0] p-8 shadow-sm">
+              <div className="flex justify-between items-center mb-4">
+                <label className="text-[11px] font-bold text-[#94a3b8] uppercase tracking-[0.1em]">Title</label>
+                <button className="text-[11px] font-bold text-[#6366f1] flex items-center gap-1.5 hover:opacity-70 bg-white border border-[#eef2ff] px-3 py-1 rounded-full cursor-pointer transition-all shadow-sm">
                   ✨ Generate with AI
                 </button>
               </div>
@@ -186,59 +187,57 @@ function BlogFormInner() {
                 value={form.title}
                 onChange={e => setTitle(e.target.value)}
                 placeholder="e.g. How I Used Cognitive Psychology to Redesign Onboarding"
-                className="w-full bg-transparent text-[18px] font-medium text-ink outline-none placeholder:text-ink-3/40 border-0 p-0"
+                className="w-full bg-transparent text-[22px] font-semibold text-[#0f172a] outline-none placeholder:text-[#cbd5e1] border-0 p-0 mb-6"
               />
-              <div className="mt-4 pt-4 border-t border-[#f1f1f5]">
-                <label className="text-[10px] font-bold text-ink-3 uppercase tracking-widest block mb-2">Slug (URL)</label>
+              
+              <div className="pt-6 border-t border-[#f1f5f9]">
+                <label className="text-[11px] font-bold text-[#94a3b8] uppercase tracking-[0.1em] block mb-3">Slug (URL)</label>
                 <input
                   value={form.slug}
                   onChange={e => update('slug', e.target.value)}
                   placeholder="auto-generated-from-title"
-                  className="w-full bg-transparent text-[13px] text-ink-2 font-mono outline-none p-0 border-0"
+                  className="w-full bg-[#f8fafc] text-[13px] text-[#475569] font-mono outline-none px-4 py-2.5 rounded-xl border border-[#f1f5f9] focus:border-[#e2e8f0] transition-colors"
                 />
               </div>
-              <div className="mt-4 pt-4 border-t border-[#f1f1f5]">
-                <label className="text-[10px] font-bold text-ink-3 uppercase tracking-widest block mb-2">Excerpt / Summary</label>
+
+              <div className="mt-6 pt-6 border-t border-[#f1f5f9]">
+                <label className="text-[11px] font-bold text-[#94a3b8] uppercase tracking-[0.1em] block mb-3">Excerpt / Summary</label>
                 <textarea
                   value={form.excerpt}
                   onChange={e => update('excerpt', e.target.value)}
                   placeholder="A one-liner that compels people to read..."
                   rows={2}
-                  className="w-full bg-transparent text-[14px] text-ink-2 outline-none resize-none p-0 border-0"
+                  className="w-full bg-transparent text-[15px] text-[#475569] outline-none resize-none p-0 border-0 leading-relaxed placeholder:text-[#cbd5e1]"
                 />
               </div>
             </div>
 
             {/* Content Section */}
-            <div className="bg-white rounded-[16px] border border-[var(--border)] p-6 shadow-sm">
-              <label className="text-[10px] font-bold text-ink-3 uppercase tracking-widest block mb-4">Content (Markdown)</label>
-              <div className="relative">
+            <div className="bg-white rounded-[24px] border border-[#e2e8f0] p-8 shadow-sm min-h-[600px] flex flex-col">
+              <label className="text-[11px] font-bold text-[#94a3b8] uppercase tracking-[0.1em] block mb-6">Content (Markdown)</label>
+              <div className="relative flex-1">
                 <textarea
                   value={form.content}
                   onChange={e => update('content', e.target.value)}
                   placeholder="# Start writing here&#10;&#10;Use markdown: **bold**, _italic_, ## Heading, - list item, [link](url)&#10;&#10;Tip: write naturally, edit later 🖋️"
-                  className="w-full min-h-[500px] bg-transparent text-[15px] leading-relaxed text-ink outline-none border-0 p-0 resize-y font-serif italic text-ink-3/60"
-                  style={{ fontStyle: form.content ? 'normal' : 'italic' }}
+                  className="w-full h-full min-h-[500px] bg-transparent text-[16px] leading-[1.8] text-[#334155] outline-none border-0 p-0 resize-none placeholder:text-[#cbd5e1]"
                 />
-              </div>
-              <div className="mt-6 pt-4 border-t border-[#f1f1f5] flex justify-between items-center text-[10px] text-ink-3 font-semibold uppercase tracking-widest">
-                <span>~{form.readTime} min read - {wordCount} words</span>
               </div>
             </div>
           </div>
 
           {/* Sidebar Area */}
-          <div className="w-full lg:w-[320px] space-y-6">
+          <div className="w-full lg:w-[360px] space-y-8">
             
             {/* Images Card */}
-            <div className="bg-white rounded-[16px] border border-[var(--border)] p-6 shadow-sm">
-              <label className="text-[10px] font-bold text-ink-3 uppercase tracking-widest block mb-1">Images</label>
-              <p className="text-[10px] text-ink-3/60 mb-4 font-medium italic">First image used as cover. Up to 5 images.</p>
+            <div className="bg-white rounded-[24px] border border-[#e2e8f0] p-8 shadow-sm">
+              <label className="text-[11px] font-bold text-[#94a3b8] uppercase tracking-[0.1em] block mb-1">Images</label>
+              <p className="text-[10px] text-[#94a3b8] mb-6 font-medium">First image used as cover. Up to 8 images.</p>
               
-              <div className="space-y-3">
-                <button className="w-full py-4 border-2 border-dashed border-[#e2e8f0] rounded-[12px] flex flex-col items-center justify-center gap-2 hover:bg-[#f8fafc] transition-all group bg-transparent cursor-pointer">
-                  <span className="text-[16px] group-hover:scale-110 transition-transform">📁</span>
-                  <span className="text-[11px] font-bold text-ink-3">Upload from device (multiple)</span>
+              <div className="space-y-4">
+                <button className="w-full py-8 border-2 border-dashed border-[#e2e8f0] rounded-[20px] flex flex-col items-center justify-center gap-3 hover:bg-[#f8fafc] hover:border-[#cbd5e1] transition-all group bg-transparent cursor-pointer">
+                  <span className="text-[20px] filter grayscale group-hover:grayscale-0 transition-all opacity-60 group-hover:opacity-100">📂</span>
+                  <span className="text-[12px] font-bold text-[#64748b]">Upload from device (multiple)</span>
                 </button>
                 
                 <div className="flex gap-2">
@@ -246,19 +245,19 @@ function BlogFormInner() {
                     value={imageUrlInput}
                     onChange={e => setImageUrlInput(e.target.value)}
                     placeholder="Or paste image URL..." 
-                    className="flex-1 bg-card2 border border-[var(--border)] rounded-[10px] px-3 py-2 text-[12px] outline-none"
+                    className="flex-1 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-4 py-3 text-[13px] outline-none focus:border-[#cbd5e1] transition-all"
                   />
-                  <button onClick={addImageUrl} className="bg-[#f1f5f9] hover:bg-[#e2e8f0] text-accent p-2 rounded-[10px] font-bold text-[14px] border-0 cursor-pointer">+</button>
+                  <button onClick={addImageUrl} className="bg-[#eff6ff] hover:bg-[#dbeafe] text-[#2563eb] px-4 rounded-xl font-bold text-[18px] border-0 cursor-pointer transition-colors">+</button>
                 </div>
                 
                 {images.length > 0 && (
-                  <div className="grid grid-cols-3 gap-2 mt-2">
+                  <div className="grid grid-cols-3 gap-3 pt-2">
                     {images.map((img, i) => (
-                      <div key={i} className="aspect-square rounded-[8px] bg-card2 border border-[var(--border)] overflow-hidden relative group">
-                        <img src={img} className="w-full h-full object-cover" />
+                      <div key={i} className="aspect-square rounded-[12px] bg-[#f8fafc] border border-[#e2e8f0] overflow-hidden relative group shadow-sm">
+                        <img src={img} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
                         <button 
                           onClick={() => setImages(prev => prev.filter((_, idx) => idx !== i))}
-                          className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[10px] font-bold transition-opacity border-0 cursor-pointer"
+                          className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[12px] font-bold transition-opacity border-0 cursor-pointer backdrop-blur-[2px]"
                         >
                           ✕
                         </button>
@@ -270,64 +269,72 @@ function BlogFormInner() {
             </div>
 
             {/* Classification Card */}
-            <div className="bg-white rounded-[16px] border border-[var(--border)] p-6 shadow-sm space-y-6">
+            <div className="bg-white rounded-[24px] border border-[#e2e8f0] p-8 shadow-sm space-y-8">
               <div>
-                <label className="text-[10px] font-bold text-ink-3 uppercase tracking-widest block mb-3">Category</label>
-                <select 
-                  value={form.category}
-                  onChange={e => update('category', e.target.value)}
-                  className="w-full bg-card2 border border-[var(--border)] rounded-[10px] px-3 py-2.5 text-[12px] font-medium text-ink outline-none appearance-none cursor-pointer"
-                >
-                  <option value="">Select category...</option>
-                  <option value="UX Design">UX Design</option>
-                  <option value="Product Strategy">Product Strategy</option>
-                  <option value="Psychology">Psychology</option>
-                  <option value="Tech">Tech</option>
-                </select>
+                <label className="text-[11px] font-bold text-[#94a3b8] uppercase tracking-[0.1em] block mb-3">Category</label>
+                <div className="relative">
+                  <select 
+                    value={form.category}
+                    onChange={e => update('category', e.target.value)}
+                    className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-4 py-3 text-[13px] font-semibold text-[#0f172a] outline-none appearance-none cursor-pointer focus:border-[#cbd5e1] transition-all"
+                  >
+                    <option value="">Select category...</option>
+                    <option value="UX Design">UX Design</option>
+                    <option value="Product Strategy">Product Strategy</option>
+                    <option value="Psychology">Psychology</option>
+                    <option value="Tech">Tech</option>
+                    <option value="Development">Development</option>
+                  </select>
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#94a3b8]">↓</div>
+                </div>
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-ink-3 uppercase tracking-widest block mb-3">Tags (comma-separated)</label>
+                <label className="text-[11px] font-bold text-[#94a3b8] uppercase tracking-[0.1em] block mb-3">Tags (comma-separated)</label>
                 <input
                   value={form.tags}
                   onChange={e => update('tags', e.target.value)}
                   placeholder="UX, Onboarding, Psychology"
-                  className="w-full bg-card2 border border-[var(--border)] rounded-[10px] px-3 py-2.5 text-[12px] outline-none"
+                  className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-4 py-3 text-[13px] outline-none focus:border-[#cbd5e1] transition-all placeholder:text-[#cbd5e1] font-medium"
                 />
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-ink-3 uppercase tracking-widest block mb-3">Read Time (min) — auto-estimated</label>
+                <label className="text-[11px] font-bold text-[#94a3b8] uppercase tracking-[0.1em] block mb-3">Read Time (min) — auto-estimated</label>
                 <input
                   type="number"
                   value={form.readTime}
                   onChange={e => update('readTime', parseInt(e.target.value))}
-                  className="w-full bg-card2 border border-[var(--border)] rounded-[10px] px-3 py-2.5 text-[12px] font-bold outline-none"
+                  className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-4 py-3 text-[13px] font-bold text-[#0f172a] outline-none focus:border-[#cbd5e1] transition-all"
                 />
               </div>
             </div>
 
-            {/* Footer Actions */}
-            <div className="bg-white rounded-[16px] border border-[var(--border)] p-6 shadow-sm">
-               <div className="flex items-center justify-between mb-6">
+            {/* Publishing Card */}
+            <div className="bg-white rounded-[24px] border border-[#e2e8f0] p-8 shadow-sm">
+               <div className="flex items-center justify-between mb-8">
                  <div>
-                   <p className="text-[13px] font-bold text-ink mb-0.5">Publish Now</p>
-                   <p className="text-[10px] text-ink-3 font-medium">Post visible to public</p>
+                   <p className="text-[14px] font-bold text-[#0f172a] mb-1">Publish Now</p>
+                   <p className="text-[11px] text-[#64748b] font-medium">Post visible to public</p>
                  </div>
                  <button 
                   onClick={() => update('status', form.status === 'published' ? 'draft' : 'published')}
-                  className={`w-12 h-6 rounded-full relative transition-colors duration-200 border-0 cursor-pointer ${form.status === 'published' ? 'bg-[#10b981]' : 'bg-[#e2e8f0]'}`}
+                  className={`w-12 h-6 rounded-full relative transition-all duration-300 border-0 cursor-pointer ${form.status === 'published' ? 'bg-[#10b981] shadow-inner' : 'bg-[#e2e8f0]'}`}
                  >
-                   <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all duration-200 ${form.status === 'published' ? 'right-1' : 'left-1'}`} />
+                   <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm transition-all duration-300 transform ${form.status === 'published' ? 'translate-x-7' : 'translate-x-1'}`} />
                  </button>
                </div>
                
                <button 
                 onClick={() => handleSave(false)} 
                 disabled={saving}
-                className="w-full bg-ink text-white font-bold text-[13px] py-4 rounded-[12px] hover:opacity-90 transition-all border-0 cursor-pointer disabled:opacity-50"
+                className="w-full bg-[#0f172a] text-white font-bold text-[14px] py-4 rounded-2xl hover:bg-[#1e293b] transition-all border-0 cursor-pointer disabled:opacity-50 shadow-md shadow-slate-200 flex items-center justify-center gap-2"
                >
-                 {saving ? 'Saving...' : '💾 Save Draft'}
+                 {saving ? (
+                   <span className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                 ) : (
+                   <>💾 Save Draft</>
+                 )}
                </button>
             </div>
           </div>
