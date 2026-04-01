@@ -15,7 +15,7 @@ export type Project = {
   projectYear: number;
   metricValue: string | null;
   metricLabel?: string;
-  published: boolean;
+  status: 'published' | 'draft' | 'archived';
   featured: boolean;
   gradient: string;
 };
@@ -33,7 +33,7 @@ export const STATIC_PROJECTS: Project[] = [
     projectYear: 2024,
     metricValue: '50k+',
     metricLabel: 'MAU',
-    published: true,
+    status: 'published',
     featured: true,
     gradient: 'linear-gradient(140deg, #2c3e50 0%, #3498db 100%)',
   },
@@ -49,7 +49,7 @@ export const STATIC_PROJECTS: Project[] = [
     projectYear: 2023,
     metricValue: '+38%',
     metricLabel: 'conversion',
-    published: true,
+    status: 'published',
     featured: true,
     gradient: 'linear-gradient(140deg, #0f2027 0%, #203a43 50%, #2c5364 100%)',
   },
@@ -65,7 +65,7 @@ export const STATIC_PROJECTS: Project[] = [
     projectYear: 2024,
     metricValue: '+61%',
     metricLabel: 'efficiency',
-    published: true,
+    status: 'published',
     featured: false,
     gradient: 'linear-gradient(140deg, #4b1248 0%, #f0c27b 100%)',
   },
@@ -81,7 +81,7 @@ export const STATIC_PROJECTS: Project[] = [
     projectYear: 2022,
     metricValue: '+61%',
     metricLabel: 'D7 retention',
-    published: true,
+    status: 'published',
     featured: false,
     gradient: 'linear-gradient(140deg, #373b44 0%, #4286f4 100%)',
   },
@@ -97,7 +97,7 @@ export const STATIC_PROJECTS: Project[] = [
     projectYear: 2021,
     metricValue: '200+',
     metricLabel: 'components',
-    published: true,
+    status: 'published',
     featured: false,
     gradient: 'linear-gradient(140deg, #1a1c2c 0%, #4a192c 100%)',
   },
@@ -112,7 +112,7 @@ export const STATIC_PROJECTS: Project[] = [
     clientName: 'INA DIGITAL',
     projectYear: 2025,
     metricValue: null,
-    published: true,
+    status: 'published',
     featured: false,
     gradient: 'linear-gradient(140deg, #141e30 0%, #243b55 100%)',
   },

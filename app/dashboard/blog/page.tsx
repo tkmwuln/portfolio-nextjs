@@ -10,7 +10,7 @@ type BlogPost = {
   title: string
   slug: string
   excerpt?: string | null
-  published: boolean
+  status: 'published' | 'draft' | 'archived'
   createdAt: string
   tags?: { id: string; name: string }[]
 }
@@ -52,13 +52,14 @@ export default function DashboardBlogPage() {
   }, [supabase, router])
 
   const togglePublish = async (post: BlogPost) => {
+    const nextStatus = post.status === 'published' ? 'draft' : 'published'
     const res = await fetch(`/api/blog/${post.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...post, published: !post.published }),
+      body: JSON.stringify({ ...post, published: nextStatus === 'published' }),
     })
     if (res.ok) {
-      setPosts(p => p.map(x => x.id === post.id ? { ...x, published: !post.published } : x))
+      setPosts(p => p.map(x => x.id === post.id ? { ...x, status: nextStatus } : x))
     }
   }
 
@@ -73,7 +74,7 @@ export default function DashboardBlogPage() {
   }
 
   const filtered = posts.filter(p =>
-    filter === 'all' ? true : filter === 'published' ? p.published : !p.published
+    filter === 'all' ? true : filter === 'published' ? p.status === 'published' : p.status !== 'published'
   )
 
   return (
@@ -116,7 +117,7 @@ export default function DashboardBlogPage() {
             <button key={f} onClick={() => setFilter(f)} className={`flex items-center gap-1.5 px-4 py-1.5 rounded-pill text-[12px] font-semibold transition-all border cursor-pointer ${filter === f ? 'bg-ink text-white border-ink' : 'bg-card2 text-ink-2 border-[var(--border)] hover:border-ink hover:text-ink'}`}>
               {f === 'all' ? 'All' : f === 'published' ? 'Published' : 'Draft'}
               <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${filter === f ? 'bg-white/20 text-white' : 'bg-[var(--border)] text-ink-3'}`}>
-                {f === 'all' ? posts.length : f === 'published' ? posts.filter(p => p.published).length : posts.filter(p => !p.published).length}
+                {f === 'all' ? posts.length : f === 'published' ? posts.filter(p => p.status === 'published').length : posts.filter(p => p.status !== 'published').length}
               </span>
             </button>
           ))}
@@ -164,9 +165,9 @@ export default function DashboardBlogPage() {
                     <td className="px-4 py-3.5">
                       <button
                         onClick={() => togglePublish(post)}
-                        className={`px-3 py-1 rounded-pill text-[11px] font-semibold cursor-pointer border-0 transition-all duration-200 ${post.published ? 'bg-[rgba(34,201,129,0.15)] text-[#22c981]' : 'bg-card2 text-ink-3'}`}
+                        className={`px-3 py-1 rounded-pill text-[11px] font-semibold cursor-pointer border-0 transition-all duration-200 ${post.status === 'published' ? 'bg-[rgba(34,201,129,0.15)] text-[#22c981]' : 'bg-card2 text-ink-3'}`}
                       >
-                        {post.published ? '✅ Published' : '📝 Draft'}
+                        {post.status === 'published' ? '✅ Published' : '📝 Draft'}
                       </button>
                     </td>
                     <td className="px-4 py-3.5">

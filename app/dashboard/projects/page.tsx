@@ -8,9 +8,9 @@ import Image from 'next/image'
 import { STATIC_PROJECTS } from '@/lib/projects'
 
 type Project = {
-  id: string; title: string; slug: string | null; published: boolean;
-  featured: boolean; category?: string; clientName?: string;
-  metricValue?: string | null; projectYear?: number; image?: string | null;
+  id: string; title: string; slug: string | null; status: 'published' | 'draft' | 'archived';
+  featured?: boolean; category?: string; clientName?: string;
+  metricValue?: string | null; projectYear?: number; cover_image_url?: string | null;
 }
 
 const SIDEBAR = [
@@ -33,7 +33,7 @@ export default function AdminProjectsPage() {
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
-      const { data, error } = await supabase.from('projects').select('id, title, slug, published, featured, category, clientName, metricValue, projectYear').order('createdAt', { ascending: false })
+      const { data, error } = await supabase.from('projects').select('id, title, slug, status, category_id, client_name, project_year, cover_image_url').order('created_at', { ascending: false })
       // Merge Supabase data with static fallback
       const live = data || []
       const merged: Project[] = live.length > 0 ? live : STATIC_PROJECTS
@@ -49,9 +49,10 @@ export default function AdminProjectsPage() {
     load()
   }, [supabase, router])
 
-  const togglePublish = async (id: string, current: boolean) => {
-    await supabase.from('projects').update({ published: !current }).eq('id', id)
-    setProjects(p => p.map(x => x.id === id ? { ...x, published: !current } : x))
+  const togglePublish = async (id: string, currentStatus: string) => {
+    const nextStatus = currentStatus === 'published' ? 'draft' : 'published'
+    await supabase.from('projects').update({ status: nextStatus }).eq('id', id)
+    setProjects(p => p.map(x => x.id === id ? { ...x, status: nextStatus as any } : x))
   }
 
   const toggleFeatured = async (id: string, current: boolean) => {
@@ -69,7 +70,7 @@ export default function AdminProjectsPage() {
   }
 
   const filtered = projects.filter(p =>
-    filter === 'all' ? true : filter === 'published' ? p.published : !p.published
+    filter === 'all' ? true : filter === 'published' ? p.status === 'published' : p.status !== 'published'
   )
 
   return (
@@ -110,7 +111,7 @@ export default function AdminProjectsPage() {
             <button key={f} onClick={() => setFilter(f)} className={`flex items-center gap-1.5 px-4 py-1.5 rounded-pill text-[12px] font-semibold transition-all border cursor-pointer ${filter === f ? 'bg-ink text-white border-ink dark:bg-white dark:text-white dark:border-white' : 'bg-card2 text-ink-2 border-[var(--border)] hover:border-ink hover:text-ink'}`}>
               {f === 'all' ? 'All' : f === 'published' ? 'Published' : 'Draft'}
               <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${filter === f ? 'bg-white/20 text-white dark:bg-black/20 dark:text-inherit' : 'bg-[var(--border)] text-ink-3'}`}>
-                {f === 'all' ? projects.length : f === 'published' ? projects.filter(p => p.published).length : projects.filter(p => !p.published).length}
+                {f === 'all' ? projects.length : f === 'published' ? projects.filter(p => p.status === 'published').length : projects.filter(p => p.status !== 'published').length}
               </span>
             </button>
           ))}
@@ -139,8 +140,8 @@ export default function AdminProjectsPage() {
                   <tr key={p.id} className="border-b border-[var(--border)] hover:bg-card2 transition-colors duration-150 last:border-0">
                     <td className="px-4 py-3">
                       <div className="w-10 h-10 rounded-[8px] overflow-hidden bg-card2 border border-[var(--border)] shrink-0 relative">
-                        {p.image ? (
-                          <Image src={p.image} alt={p.title} fill className="object-cover" />
+                        {p.cover_image_url ? (
+                          <Image src={p.cover_image_url} alt={p.title} fill className="object-cover" />
                         ) : (
                           <div className="absolute inset-0 flex items-center justify-center text-[10px] text-ink-3 font-bold">
                             {p.title?.slice(0, 2).toUpperCase()}
@@ -164,10 +165,10 @@ export default function AdminProjectsPage() {
                     <td className="px-4 py-3.5 text-[12px] text-ink-2">{p.projectYear || '—'}</td>
                     <td className="px-4 py-3.5">
                       <button
-                        onClick={() => togglePublish(p.id, p.published)}
-                        className={`px-3 py-1 rounded-pill text-[11px] font-semibold cursor-pointer border-0 transition-all duration-200 ${p.published ? 'bg-[rgba(34,201,129,0.15)] text-[#22c981]' : 'bg-card2 text-ink-3'}`}
+                        onClick={() => togglePublish(p.id, p.status)}
+                        className={`px-3 py-1 rounded-pill text-[11px] font-semibold cursor-pointer border-0 transition-all duration-200 ${p.status === 'published' ? 'bg-[rgba(34,201,129,0.15)] text-[#22c981]' : 'bg-card2 text-ink-3'}`}
                       >
-                        {p.published ? '✅ Published' : '📝 Draft'}
+                        {p.status === 'published' ? '✅ Published' : '📝 Draft'}
                       </button>
                     </td>
                     <td className="px-4 py-3.5">

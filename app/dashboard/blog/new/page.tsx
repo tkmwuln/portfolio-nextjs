@@ -20,7 +20,7 @@ type FormData = {
   excerpt: string
   content: string
   tags: string
-  published: boolean
+  status: 'published' | 'draft' | 'archived'
 }
 
 function BlogFormInner() {
@@ -38,7 +38,7 @@ function BlogFormInner() {
     excerpt: '',
     content: '',
     tags: '',
-    published: false,
+    status: 'draft',
   })
 
   useEffect(() => {
@@ -58,7 +58,7 @@ function BlogFormInner() {
             excerpt: post.excerpt || '',
             content: post.content || '',
             tags: (post.tags || []).map((t: { name: string }) => t.name).join(', '),
-            published: post.published ?? false,
+            status: post.status || 'draft',
           })
         }
       }
@@ -71,7 +71,7 @@ function BlogFormInner() {
     setForm(f => ({ ...f, title: val, slug }))
   }
 
-  const update = (k: keyof FormData, v: string | boolean) => setForm(f => ({ ...f, [k]: v }))
+  const update = (k: keyof FormData, v: string) => setForm(f => ({ ...f, [k]: v }))
 
   const handleSave = async (publish = false) => {
     if (!form.title.trim()) { setMsg({ type: 'error', text: 'Title is required.' }); return }
@@ -85,7 +85,7 @@ function BlogFormInner() {
       excerpt: form.excerpt,
       content: form.content,
       tags,
-      published: publish || form.published,
+      status: publish ? 'published' : form.status,
       userId,
     }
 
@@ -221,17 +221,17 @@ function BlogFormInner() {
               <div>
                 <label className="block text-[11px] font-semibold text-ink-3 uppercase tracking-wider mb-2">Status</label>
                 <button
-                  onClick={() => update('published', !form.published)}
-                  className={`px-4 py-2 rounded-pill text-[12px] font-semibold border-0 cursor-pointer transition-all ${form.published ? 'bg-[rgba(34,201,129,0.15)] text-[#22c981]' : 'bg-card2 text-ink-3'}`}
+                  onClick={() => update('status', form.status === 'published' ? 'draft' : 'published')}
+                  className={`px-4 py-2 rounded-pill text-[12px] font-semibold border-0 cursor-pointer transition-all ${form.status === 'published' ? 'bg-[rgba(34,201,129,0.15)] text-[#22c981]' : 'bg-card2 text-ink-3'}`}
                 >
-                  {form.published ? '✅ Published' : '📝 Draft'}
+                  {form.status === 'published' ? '✅ Published' : '📝 Draft'}
                 </button>
               </div>
             </div>
           </div>
 
           {/* View Post link (if editing & published) */}
-          {editId && form.published && form.slug && (
+          {editId && form.status === 'published' && form.slug && (
             <a href={`/blog/${form.slug}`} target="_blank" className="text-accent text-[13px] no-underline hover:underline font-medium">
               View published post ↗
             </a>
