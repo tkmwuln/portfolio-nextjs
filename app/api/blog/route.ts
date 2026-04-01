@@ -39,7 +39,9 @@ export async function POST(req: Request) {
         slug: body.slug || body.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
         excerpt: body.excerpt || null,
         content: body.content || '',
-        status: body.published ? 'published' : 'draft',
+        coverImageUrl: body.coverImageUrl || null,
+        readTimeMin: body.readTimeMin || 1,
+        status: body.status || (body.published ? 'published' : 'draft'),
         authorId: userId,
         tags: body.tags?.length
           ? {
@@ -57,6 +59,7 @@ export async function POST(req: Request) {
     });
     return NextResponse.json(post, { status: 201 });
   } catch (err: unknown) {
+    console.error('Error creating post:', err);
     return NextResponse.json({ error: err instanceof Error ? err.message : 'Unknown' }, { status: 500 });
   }
 }

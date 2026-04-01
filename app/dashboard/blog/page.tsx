@@ -4,6 +4,7 @@ import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import Sidebar from '@/app/components/dashboard/Sidebar'
 
 type BlogPost = {
   id: string
@@ -14,15 +15,6 @@ type BlogPost = {
   createdAt: string
   tags?: { id: string; name: string }[]
 }
-
-const SIDEBAR = [
-  { label: 'Overview', href: '/dashboard', icon: '📊' },
-  { label: 'Projects', href: '/dashboard/projects', icon: '🚀' },
-  { label: 'Blog', href: '/dashboard/blog', icon: '📝' },
-  { label: 'Profile', href: '/dashboard/profile', icon: '👤' },
-  { label: 'Content', href: '/dashboard/content', icon: '📄' },
-  { label: 'Access', href: '/dashboard/access', icon: '🔐' },
-]
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
@@ -78,26 +70,8 @@ export default function DashboardBlogPage() {
   )
 
   return (
-    <div className="min-h-screen bg-page flex">
-      {/* Sidebar */}
-      <aside className="w-64 shrink-0 bg-card border-r border-[var(--border)] flex flex-col py-8 px-5 sticky top-0 h-screen">
-        <div className="mb-8">
-          <Link href="/" className="font-display font-extrabold text-[17px] tracking-tight text-ink no-underline" style={{ letterSpacing: '-0.03em' }}>
-            Putri Wulandari<span className="text-accent">.</span>
-          </Link>
-          <p className="text-[11px] text-ink-3 mt-1 font-semibold tracking-wider uppercase">Admin Dashboard</p>
-        </div>
-        <nav className="space-y-1 flex-1">
-          {SIDEBAR.map(item => (
-            <Link key={item.href} href={item.href} className={`flex items-center gap-3 px-3 py-2.5 rounded-[12px] text-[13px] font-medium no-underline transition-all duration-200 ${item.href === '/dashboard/blog' ? 'bg-accent-soft text-accent' : 'text-ink-2 hover:bg-card2 hover:text-ink'}`}>
-              <span>{item.icon}</span>{item.label}
-            </Link>
-          ))}
-        </nav>
-        <Link href="/" className="flex items-center gap-3 px-3 py-2.5 rounded-[12px] text-[13px] text-ink-2 hover:text-ink no-underline transition-all duration-200">
-          ← Back to Site
-        </Link>
-      </aside>
+    <div className="min-h-screen bg-page flex flex-col md:flex-row">
+      <Sidebar />
 
       {/* Main */}
       <main className="flex-1 p-8">
@@ -135,8 +109,8 @@ export default function DashboardBlogPage() {
             <Link href="/dashboard/blog/new" className="btn-primary inline-flex">+ New Post</Link>
           </div>
         ) : (
-          <div className="card overflow-hidden">
-            <table className="w-full text-[13px]">
+          <div className="card overflow-x-auto">
+            <table className="w-full text-[13px] min-w-[700px]">
               <thead>
                 <tr className="border-b border-[var(--border)]">
                   <th className="text-left px-5 py-3 text-ink-3 font-semibold tracking-wider text-[11px] uppercase">Title</th>
@@ -183,7 +157,7 @@ export default function DashboardBlogPage() {
                         <button
                           onClick={() => deletePost(post.id)}
                           disabled={deleting === post.id}
-                          className="text-red-400 hover:text-red-500 text-[12px] cursor-pointer bg-transparent border-0 disabled:opacity-50"
+                          className="text-red-400 hover:text-red-500 text-[12px] cursor-pointer bg-transparent border-0 disabled:opacity-50 p-0"
                         >
                           {deleting === post.id ? '...' : 'Delete'}
                         </button>

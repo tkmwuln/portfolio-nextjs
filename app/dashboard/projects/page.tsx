@@ -6,21 +6,13 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { STATIC_PROJECTS } from '@/lib/projects'
+import Sidebar from '@/app/components/dashboard/Sidebar'
 
 type Project = {
   id: string; title: string; slug: string | null; status: 'published' | 'draft' | 'archived';
   featured?: boolean; category?: string; clientName?: string;
   metricValue?: string | null; projectYear?: number; cover_image_url?: string | null;
 }
-
-const SIDEBAR = [
-  { label: 'Overview', href: '/dashboard', icon: '📊' },
-  { label: 'Projects', href: '/dashboard/projects', icon: '🚀' },
-  { label: 'Blog', href: '/dashboard/blog', icon: '📝' },
-  { label: 'Profile', href: '/dashboard/profile', icon: '👤' },
-  { label: 'Content', href: '/dashboard/content', icon: '📄' },
-  { label: 'Access', href: '/dashboard/access', icon: '🔐' },
-]
 
 export default function AdminProjectsPage() {
   const router = useRouter()
@@ -36,11 +28,11 @@ export default function AdminProjectsPage() {
       const { data, error } = await supabase.from('projects').select('id, title, slug, status, category_id, client_name, project_year, cover_image_url').order('created_at', { ascending: false })
       // Merge Supabase data with static fallback
       const live = data || []
-      const merged: Project[] = live.length > 0 ? live : STATIC_PROJECTS
+      const merged: Project[] = live.length > 0 ? live : STATIC_PROJECTS as any
       // Add any static slugs not in live data
       if (live.length > 0) {
         STATIC_PROJECTS.forEach(sp => {
-          if (!live.find(p => p.slug === sp.slug)) merged.push(sp)
+          if (!live.find(p => p.slug === sp.slug)) merged.push(sp as any)
         })
       }
       setProjects(merged)
@@ -53,11 +45,6 @@ export default function AdminProjectsPage() {
     const nextStatus = currentStatus === 'published' ? 'draft' : 'published'
     await supabase.from('projects').update({ status: nextStatus }).eq('id', id)
     setProjects(p => p.map(x => x.id === id ? { ...x, status: nextStatus as any } : x))
-  }
-
-  const toggleFeatured = async (id: string, current: boolean) => {
-    await supabase.from('projects').update({ featured: !current }).eq('id', id)
-    setProjects(p => p.map(x => x.id === id ? { ...x, featured: !current } : x))
   }
 
   const deleteProject = async (id: string) => {
@@ -74,25 +61,8 @@ export default function AdminProjectsPage() {
   )
 
   return (
-    <div className="min-h-screen bg-page flex">
-      <aside className="w-64 shrink-0 bg-card border-r border-[var(--border)] flex flex-col py-8 px-5 sticky top-0 h-screen">
-        <div className="mb-8">
-          <Link href="/" className="font-display font-extrabold text-[17px] tracking-tight text-ink no-underline" style={{ letterSpacing: '-0.03em' }}>
-            Putri Wulandari<span className="text-accent">.</span>
-          </Link>
-          <p className="text-[11px] text-ink-3 mt-1 font-semibold tracking-wider uppercase">Admin Dashboard</p>
-        </div>
-        <nav className="space-y-1 flex-1">
-          {SIDEBAR.map(item => (
-            <Link key={item.href} href={item.href} className={`flex items-center gap-3 px-3 py-2.5 rounded-[12px] text-[13px] font-medium no-underline transition-all duration-200 ${item.href === '/dashboard/projects' ? 'bg-accent-soft text-accent' : 'text-ink-2 hover:bg-card2 hover:text-ink'}`}>
-              <span>{item.icon}</span>{item.label}
-            </Link>
-          ))}
-        </nav>
-        <Link href="/" className="flex items-center gap-3 px-3 py-2.5 rounded-[12px] text-[13px] text-ink-2 hover:text-ink no-underline transition-all duration-200">
-          ← Back to Site
-        </Link>
-      </aside>
+    <div className="min-h-screen bg-page flex flex-col md:flex-row">
+      <Sidebar />
 
       <main className="flex-1 p-8">
         <div className="flex items-center justify-between mb-4">
@@ -108,9 +78,9 @@ export default function AdminProjectsPage() {
         {/* Filter tabs */}
         <div className="flex gap-2 mb-5">
           {(['all', 'published', 'draft'] as const).map(f => (
-            <button key={f} onClick={() => setFilter(f)} className={`flex items-center gap-1.5 px-4 py-1.5 rounded-pill text-[12px] font-semibold transition-all border cursor-pointer ${filter === f ? 'bg-ink text-white border-ink dark:bg-white dark:text-white dark:border-white' : 'bg-card2 text-ink-2 border-[var(--border)] hover:border-ink hover:text-ink'}`}>
+            <button key={f} onClick={() => setFilter(f)} className={`flex items-center gap-1.5 px-4 py-1.5 rounded-pill text-[12px] font-semibold transition-all border cursor-pointer ${filter === f ? 'bg-ink text-white border-ink' : 'bg-card2 text-ink-2 border-[var(--border)] hover:border-ink hover:text-ink'}`}>
               {f === 'all' ? 'All' : f === 'published' ? 'Published' : 'Draft'}
-              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${filter === f ? 'bg-white/20 text-white dark:bg-black/20 dark:text-inherit' : 'bg-[var(--border)] text-ink-3'}`}>
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${filter === f ? 'bg-white/20 text-white' : 'bg-[var(--border)] text-ink-3'}`}>
                 {f === 'all' ? projects.length : f === 'published' ? projects.filter(p => p.status === 'published').length : projects.filter(p => p.status !== 'published').length}
               </span>
             </button>
@@ -122,8 +92,8 @@ export default function AdminProjectsPage() {
             <div className="w-8 h-8 rounded-full border-2 border-accent border-t-transparent animate-spin mx-auto" />
           </div>
         ) : (
-          <div className="card overflow-hidden">
-            <table className="w-full text-[13px]">
+          <div className="card overflow-x-auto">
+            <table className="w-full text-[13px] min-w-[800px]">
               <thead>
                 <tr className="border-b border-[var(--border)]">
                   <th className="text-left px-4 py-3 text-ink-3 font-semibold tracking-wider text-[11px] uppercase w-10"></th>
@@ -141,7 +111,7 @@ export default function AdminProjectsPage() {
                     <td className="px-4 py-3">
                       <div className="w-10 h-10 rounded-[8px] overflow-hidden bg-card2 border border-[var(--border)] shrink-0 relative">
                         {p.cover_image_url ? (
-                          <Image src={p.cover_image_url} alt={p.title} fill className="object-cover" />
+                          <img src={p.cover_image_url} alt={p.title} className="w-full h-full object-cover" />
                         ) : (
                           <div className="absolute inset-0 flex items-center justify-center text-[10px] text-ink-3 font-bold">
                             {p.title?.slice(0, 2).toUpperCase()}
@@ -180,7 +150,7 @@ export default function AdminProjectsPage() {
                           Edit ✏️
                         </Link>
                         <span className="text-ink-3">·</span>
-                        <button onClick={() => deleteProject(p.id)} className="text-red-400 hover:text-red-500 text-[12px] cursor-pointer bg-transparent border-0">
+                        <button onClick={() => deleteProject(p.id)} className="text-red-400 hover:text-red-500 text-[12px] cursor-pointer bg-transparent border-0 p-0">
                           Delete
                         </button>
                       </div>
