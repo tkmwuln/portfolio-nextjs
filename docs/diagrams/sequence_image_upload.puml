@@ -1,0 +1,39 @@
+@startuml Image_Upload_Sequence
+skinparam style strictuml
+skinparam responseMessageBelowArrow true
+
+actor Admin
+participant "Dashboard UI" as UI
+participant "API: /api/upload" as API
+participant "Supabase Storage" as Storage
+database "S3 / Object Storage" as S3
+
+Admin -> UI : Select Image File
+activate UI
+
+UI -> API : POST /api/upload (FormData)
+activate API
+
+API -> API : Generate unique path\ne.g., uploads/171336...png
+
+API -> Storage : upload(path, file)
+activate Storage
+Storage -> S3 : Store Object
+activate S3
+S3 --> Storage : Success
+deactivate S3
+Storage --> API : { data, error: null }
+deactivate Storage
+
+API -> Storage : getPublicUrl(path)
+activate Storage
+Storage --> API : { publicUrl }
+deactivate Storage
+
+API --> UI : 200 OK { url: "..." }
+deactivate API
+
+UI --> Admin : Update UI with Preview URL
+deactivate UI
+
+@enduml

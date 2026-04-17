@@ -1,0 +1,46 @@
+@startuml Blog_CRUD_Sequence
+skinparam style strictuml
+skinparam responseMessageBelowArrow true
+
+actor "Admin (Dashboard)" as Admin
+participant "Dashboard UI" as UI
+participant "API: /api/blog" as API
+participant "Prisma Client" as Prisma
+database "PostgreSQL" as DB
+
+== Create Blog Post ==
+Admin -> UI : Write Blog Content
+Admin -> UI : Click "Publish"
+activate UI
+
+UI -> API : POST /api/blog (JSON)
+activate API
+
+API -> Prisma : prisma.blogPost.create({ data })
+activate Prisma
+Prisma -> DB : INSERT INTO "BlogPost" ...
+activate DB
+DB --> Prisma : { postRecord }
+deactivate DB
+Prisma --> API : post
+deactivate Prisma
+
+API --> UI : 201 Created (post)
+UI --> Admin : Update Post List
+deactivate API
+deactivate UI
+
+== Update Blog Post ==
+Admin -> UI : Edit Existing Post
+Admin -> UI : Click "Update"
+activate UI
+UI -> API : PATCH /api/blog/[id]
+activate API
+API -> Prisma : prisma.blogPost.update({ where: {id}, data })
+Prisma --> API : updatedPost
+API --> UI : 200 OK
+UI --> Admin : Show Success
+deactivate API
+deactivate UI
+
+@enduml

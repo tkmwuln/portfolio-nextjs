@@ -1,0 +1,46 @@
+@startuml System_Architecture_HighLevel
+skinparam style strictuml
+
+actor User
+actor Admin
+
+box "Frontend (Next.js)" #LightBlue
+    participant "Browser" as Browser
+    participant "Server Components" as Server
+end box
+
+box "Backend Services" #LightYellow
+    participant "API Routes" as API
+    participant "Middleware" as Middleware
+end box
+
+box "Infrastructure" #LightGray
+    participant "Supabase Auth" as Auth
+    participant "Prisma / DB" as DB
+    participant "Supabase Storage" as Storage
+end box
+
+== Public Access ==
+User -> Browser : Visit Site
+Browser -> Server : Request Page
+Server -> DB : Fetch Content
+DB --> Server : Content Data
+Server --> Browser : Rendered HTML
+
+== Admin Operations ==
+Admin -> Browser : Login
+Browser -> Auth : Authenticate
+Auth --> Browser : JWT Session
+
+Admin -> Browser : Create Project
+Browser -> API : POST /api/projects
+API -> Middleware : Validate Session
+Middleware -> Auth : Check User
+Auth --> Middleware : OK
+Middleware -> API : Proceed
+API -> Storage : Upload Image
+Storage --> API : URL
+API -> DB : Save Project Info
+DB --> API : Success
+API --> Browser : Success
+@enduml
