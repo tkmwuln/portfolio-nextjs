@@ -1,0 +1,56 @@
+@startuml Portfolio_Sequence_Diagram
+skinparam style strictuml
+skinparam responseMessageBelowArrow true
+skinparam MaxMessageSize 250
+
+actor "User (Browser)" as User
+participant "Next.js Server (app/page.tsx)" as Server
+participant "Prisma ORM" as Prisma
+database "Database (PostgreSQL)" as DB
+participant "Supabase Auth" as Auth
+
+User -> Server : GET /
+activate Server
+
+Server -> Server : getPageData()
+activate Server
+
+Server -> Prisma : prisma.project.findMany()
+activate Prisma
+Prisma -> DB : SELECT * FROM "Project" WHERE published=true
+activate DB
+DB --> Prisma : Result: List of Projects
+deactivate DB
+Prisma --> Server : projects[]
+deactivate Prisma
+
+Server -> Prisma : prisma.blogPost.findMany()
+activate Prisma
+Prisma -> DB : SELECT * FROM "BlogPost" WHERE published=true
+activate DB
+DB --> Prisma : Result: List of Posts
+deactivate DB
+Prisma --> Server : posts[]
+deactivate Prisma
+
+Server -> Prisma : prisma.user.findFirst()
+activate Prisma
+Prisma -> DB : SELECT * FROM "User" LIMIT 1
+activate DB
+DB --> Prisma : Result: Profile Data
+deactivate DB
+Prisma --> Server : profile
+deactivate Prisma
+
+deactivate Server
+
+Server -> Auth : createClient()
+activate Auth
+Auth --> Server : client
+deactivate Auth
+
+Server -> Server : Render (Hero, Bento, Projects, Blogs)
+User <<-- Server : 200 OK (HTML/React Components)
+deactivate Server
+
+@enduml

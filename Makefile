@@ -83,6 +83,13 @@ reset: clean ## Full reset: remove node_modules and reinstall
 	@echo "✓ Full reset complete"
 
 # ──────────────────────────────────────────────────────────────────────────────
+# Documentation / Diagrams
+# ──────────────────────────────────────────────────────────────────────────────
+
+diagrams: ## Generate PlantUML sequence diagrams
+	@bash scripts/generate-diagrams.sh
+
+# ──────────────────────────────────────────────────────────────────────────────
 # Help
 # ──────────────────────────────────────────────────────────────────────────────
 
@@ -93,4 +100,4 @@ help: ## Show this help message
 	@echo ""
 	@echo "Usage: make [command]"
 
-.PHONY: dev dev-turbo build start clean lint lint-fix typecheck check db-push db-generate db-studio db-seed db-seed-sample install update outdated reset help
+.PHONY: dev dev-turbo build start clean lint lint-fix typecheck check db-push db-generate db-studio db-seed db-seed-sample install update outdated reset diagrams help

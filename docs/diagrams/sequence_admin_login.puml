@@ -1,0 +1,39 @@
+@startuml Admin_Login_Sequence
+skinparam style strictuml
+skinparam responseMessageBelowArrow true
+
+actor Admin
+participant "Login Page (Client)" as Client
+participant "Supabase Client" as Supabase
+participant "Supabase Auth Service" as Auth
+participant "Next.js Router" as Router
+
+Admin -> Client : Enter Email & Password
+Admin -> Client : Click "Sign into Dashboard"
+activate Client
+
+Client -> Client : setLoading(true)
+Client -> Supabase : auth.signInWithPassword(email, password)
+activate Supabase
+
+Supabase -> Auth : POST /auth/v1/token
+activate Auth
+Auth --> Supabase : 200 OK (JWT Session)
+deactivate Auth
+
+Supabase --> Client : { data, error: null }
+deactivate Supabase
+
+alt #LightGreen Successful Login
+    Client -> Router : push('/dashboard')
+    Client -> Client : window.location.reload() (Delayed)
+    Router --> Admin : Redirect to Dashboard
+else #LightPink Login Failed
+    Client -> Client : setErrorMsg(error.message)
+    Client -> Client : setLoading(false)
+    Client --> Admin : Display Error Message
+end
+
+deactivate Client
+
+@enduml
