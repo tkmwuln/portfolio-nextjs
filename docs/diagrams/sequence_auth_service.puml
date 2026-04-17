@@ -1,0 +1,38 @@
+@startuml Auth_Service_Sequence
+skinparam style strictuml
+skinparam responseMessageBelowArrow true
+
+actor User
+participant "App / Browser" as Browser
+participant "Middleware" as Middleware
+participant "API: /api/auth/*" as AuthAPI
+participant "Supabase Auth" as Auth
+
+== Authentication Check (Middleware) ==
+User -> Browser : Access /dashboard
+activate Browser
+Browser -> Middleware : Intercept Request
+activate Middleware
+Middleware -> Auth : getUser() / getSession()
+Auth --> Middleware : { data: { user } }
+alt #LightPink No User
+    Middleware --> Browser : Redirect to /login
+else #LightGreen Authorized
+    Middleware --> Browser : Allow Access
+end
+deactivate Middleware
+deactivate Browser
+
+== Logout Flow ==
+User -> Browser : Click "Logout"
+activate Browser
+Browser -> AuthAPI : POST /api/auth/logout
+activate AuthAPI
+AuthAPI -> Auth : signOut()
+Auth --> AuthAPI : Success
+AuthAPI --> Browser : 200 OK / Redirect
+deactivate AuthAPI
+Browser --> User : Show Login Page
+deactivate Browser
+
+@enduml

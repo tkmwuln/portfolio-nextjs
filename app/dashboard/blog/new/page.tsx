@@ -1,318 +1,353 @@
 'use client'
 
-import { useState, useRef } from 'react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
+import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import { useEffect, useState, Suspense } from 'react'
+import Sidebar from '@/app/components/dashboard/Sidebar'
 
-const SIDEBAR = [
-  { label: 'Overview', href: '/dashboard', icon: '📊' },
-  { label: 'Projects', href: '/dashboard/projects', icon: '🚀' },
-  { label: 'Blog', href: '/dashboard/blog', icon: '📝' },
-  { label: 'Profile', href: '/dashboard/profile', icon: '👤' },
-  { label: 'Content', href: '/dashboard/content', icon: '📄' },
-  { label: 'Access', href: '/dashboard/access', icon: '🔐' },
-]
+type FormData = {
+  title: string
+  slug: string
+  excerpt: string
+  content: string
+  tags: string
+  category: string
+  readTime: number
+  coverImageUrl: string
+  status: 'published' | 'draft' | 'archived'
+}
 
-const CATEGORIES = [
-  'Product Management', 'UX Design', 'Service Design', 'Govtech',
-  'Fintech', 'Case Study', 'Reflections', 'Tools & Process',
-]
-
-const FIELD = ({ label, children }: { label: string; children: React.ReactNode }) => (
-  <div className="flex flex-col gap-1.5 mb-4 last:mb-0">
-    <label className="label uppercase text-ink-3 text-[11px] font-semibold">{label}</label>
-    {children}
-  </div>
-)
-
-const INPUT_CLS = "w-full px-4 py-2.5 rounded-[12px] border border-[var(--border)] bg-card2 text-ink text-[14px] outline-none focus:border-accent transition-colors"
-
-export default function NewBlogPostPage() {
+function BlogFormInner() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const editId = searchParams.get('edit')
   const supabase = createClient()
-  const fileInputRef = useRef<HTMLInputElement>(null)
+
   const [saving, setSaving] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null)
+  const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [images, setImages] = useState<string[]>([])
   const [imageUrlInput, setImageUrlInput] = useState('')
-  const [showAi, setShowAi] = useState(false)
-  const [aiContext, setAiContext] = useState('')
-  const [generatingAi, setGeneratingAi] = useState(false)
-
-  const [form, setForm] = useState({
+  
+  const [form, setForm] = useState<FormData>({
     title: '',
     slug: '',
     excerpt: '',
     content: '',
-    category: '',
     tags: '',
-    readTimeMin: '',
-    published: false,
+    category: '',
+    readTime: 1,
+    coverImageUrl: '',
+    status: 'draft',
   })
+
+  useEffect(() => {
+    const init = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { router.push('/login'); return }
+      setUserId(user.id)
+
+      if (editId) {
+        const res = await fetch(`/api/blog/${editId}`)
+        if (res.ok) {
+          const post = await res.json()
+          setForm({
+            title: post.title || '',
+            slug: post.slug || '',
+            excerpt: post.excerpt || '',
+            content: post.content || '',
+            tags: (post.tags || []).map((t: { name: string }) => t.name).join(', '),
+            category: post.category || '',
+            readTime: post.readTimeMin || 1,
+            coverImageUrl: post.coverImageUrl || '',
+            status: post.status || 'draft',
+          })
+          if (post.coverImageUrl) setImages([post.coverImageUrl])
+        }
+      }
+    }
+    init()
+  }, [supabase, router, editId])
+
+  // Word count & Read time estimation
+  useEffect(() => {
+    const words = form.content.trim() ? form.content.trim().split(/\s+/).length : 0
+    const minutes = Math.max(1, Math.ceil(words / 200))
+    setForm(f => ({ ...f, readTime: minutes }))
+  }, [form.content])
 
   const setTitle = (val: string) => {
     const slug = val.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
     setForm(f => ({ ...f, title: val, slug }))
   }
 
-  const word = (text: string) => text.trim().split(/\s+/).length
-  const estimateRead = (text: string) => Math.max(1, Math.ceil(word(text) / 200))
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || [])
-    const urls = files.map(f => URL.createObjectURL(f))
-    setImages(prev => [...prev, ...urls].slice(0, 8))
-  }
+  const update = (k: keyof FormData, v: any) => setForm(f => ({ ...f, [k]: v }))
 
   const addImageUrl = () => {
-    const url = imageUrlInput.trim()
-    if (!url) return
-    setImages(prev => [...prev, url].slice(0, 8))
+    if (!imageUrlInput.trim()) return
+    setImages(prev => [...prev, imageUrlInput.trim()])
+    if (!form.coverImageUrl) update('coverImageUrl', imageUrlInput.trim())
     setImageUrlInput('')
   }
 
-  const removeImage = (i: number) => {
-    setImages(prev => prev.filter((_, idx) => idx !== i))
+  const handleSave = async (publishOverride?: boolean) => {
+    if (!form.title.trim()) { setMsg({ type: 'error', text: 'Title is required.' }); return }
+    setSaving(true)
+    setMsg(null)
+
+    const isPublishing = publishOverride !== undefined ? publishOverride : (form.status === 'published')
+    const tags = form.tags.split(',').map(t => t.trim()).filter(Boolean)
+    
+    const payload = {
+      ...form,
+      tags,
+      status: isPublishing ? 'published' : 'draft',
+      userId,
+      coverImageUrl: images[0] || form.coverImageUrl,
+      readTimeMin: form.readTime
+    }
+
+    const url = editId ? `/api/blog/${editId}` : '/api/blog'
+    const method = editId ? 'PUT' : 'POST'
+
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const data = await res.json()
+
+      if (!res.ok) {
+        setMsg({ type: 'error', text: data.error || 'Failed to save post.' })
+      } else {
+        setMsg({ type: 'success', text: isPublishing ? '✅ Published!' : '✅ Saved as draft!' })
+        if (!editId) {
+          setTimeout(() => router.push(`/dashboard/blog/new?edit=${data.id}`), 800)
+        }
+      }
+    } catch {
+      setMsg({ type: 'error', text: 'Network error. Please try again.' })
+    }
+    setSaving(false)
   }
 
-  const handleSave = async (pub: boolean) => {
-    if (!form.title) return alert('Please add a title')
-    setSaving(true)
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      const payload = {
-        title: form.title,
-        slug: form.slug || form.title.toLowerCase().replace(/\s+/g, '-'),
-        excerpt: form.excerpt,
-        content: form.content,
-        category: form.category,
-        tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
-        cover_image_url: images[0] || '',
-        images: images,
-        read_time_min: parseInt(form.readTimeMin) || estimateRead(form.content),
-        published: pub,
-        author_id: user?.id,
-        created_at: new Date().toISOString(),
-      }
-      const { error } = await supabase.from('blog_posts').insert(payload)
-      if (error) throw error
-      router.push('/dashboard/blog')
-    } catch (err) {
-      console.error(err)
-      router.push('/dashboard/blog')
-    } finally {
-      setSaving(false)
-    }
-  }
 
   return (
-    <div className="min-h-screen bg-page flex">
-      {/* Sidebar */}
-      <aside className="w-64 shrink-0 bg-card border-r border-[var(--border)] hidden md:flex flex-col py-8 px-5 sticky top-0 h-screen">
-        <div className="mb-8">
-          <Link href="/" className="font-display font-extrabold text-[17px] tracking-tight text-ink no-underline" style={{ letterSpacing: '-0.03em' }}>
-            Putri Wulandari<span className="text-accent">.</span>
-          </Link>
-          <p className="text-[11px] text-ink-3 mt-1 font-semibold tracking-wider uppercase">Admin Dashboard</p>
-        </div>
-        <nav className="space-y-1 flex-1">
-          {SIDEBAR.map(item => (
-            <Link key={item.href} href={item.href} className={`flex items-center gap-3 px-3 py-2.5 rounded-[12px] text-[13px] font-medium no-underline transition-all duration-200 ${item.href === '/dashboard/blog' ? 'bg-accent-soft text-accent' : 'text-ink-2 hover:bg-card2 hover:text-ink'}`}>
-              <span>{item.icon}</span>{item.label}
+    <div className="min-h-screen bg-[#f1f5f9] flex flex-col md:flex-row font-body text-[#0f172a]">
+      <Sidebar />
+
+      <main className="flex-1 p-8 md:p-12 overflow-y-auto">
+        {/* Top Header */}
+        <div className="flex items-center justify-between mb-10">
+          <div className="flex items-center gap-4">
+            <Link href="/dashboard/blog" className="flex items-center gap-2 text-[#94a3b8] hover:text-[#475569] text-[14px] font-medium transition-colors no-underline">
+              <span className="text-[18px]">←</span> Blog
             </Link>
-          ))}
-        </nav>
-        <div className="space-y-2 mt-3">
-          <Link href="/" target="_blank" className="flex items-center gap-2 w-full px-3 py-2.5 rounded-[12px] text-[13px] font-semibold text-accent bg-accent-soft no-underline hover:bg-accent hover:text-white transition-all">
-            🌐 View Live Site ↗
-          </Link>
-          <Link href="/" className="flex items-center gap-3 px-3 py-2.5 rounded-[12px] text-[13px] text-ink-2 hover:text-ink no-underline transition-all duration-200">← Back to Site</Link>
-        </div>
-      </aside>
-
-      {/* Main */}
-      <main className="flex-1 p-4 md:p-8">
-        {/* Mobile top bar */}
-        <div className="flex md:hidden items-center justify-between mb-4 pb-3 border-b border-[var(--border)]">
-          <Link href="/dashboard/blog" className="text-ink-2 text-sm hover:text-ink">← Blog</Link>
-          <Link href="/" target="_blank" className="text-[12px] text-accent font-semibold">View Site ↗</Link>
-        </div>
-
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <Link href="/dashboard/blog" className="hidden md:block text-ink-3 text-sm hover:text-ink">← Blog</Link>
-            <h1 className="font-display text-[24px] md:text-[26px] font-extrabold text-ink tracking-tight">New Post</h1>
+            <h1 className="font-display text-[28px] font-bold text-[#0f172a] tracking-tight">New Post</h1>
           </div>
-          <div className="flex gap-2">
-            <button onClick={() => handleSave(false)} disabled={saving} className="btn-ghost text-[13px] py-2.5 px-5">
-              {saving ? 'Saving…' : '📄 Save Draft'}
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => handleSave(false)} 
+              disabled={saving}
+              className="px-6 py-2.5 rounded-full text-[14px] font-semibold text-[#475569] bg-white border border-[#e2e8f0] hover:bg-[#f8fafc] hover:border-[#cbd5e1] transition-all shadow-sm flex items-center gap-2 cursor-pointer disabled:opacity-50"
+            >
+              📄 Save Draft
             </button>
-            <button onClick={() => handleSave(true)} disabled={saving} className="btn-primary text-[13px] py-2.5 px-5">
+            <button 
+              onClick={() => handleSave(true)} 
+              disabled={saving}
+              className="px-8 py-2.5 rounded-full text-[14px] font-bold text-white bg-[#0f172a] hover:bg-[#1e293b] transition-all flex items-center gap-2 shadow-md shadow-slate-200 cursor-pointer disabled:opacity-50"
+            >
               🚀 Publish
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-5">
-          {/* Left: content */}
-          <div className="space-y-4">
-            <div className="card p-6">
-              <div className="flex flex-col gap-1.5 mb-4 last:mb-0">
-                <div className="flex items-center justify-between">
-                  <label className="label uppercase text-ink-3 text-[11px] font-semibold">Title</label>
-                  <button onClick={() => setShowAi(!showAi)} className="text-[10px] text-accent font-semibold flex items-center gap-1 hover:underline bg-transparent border-0 cursor-pointer transition-all">
-                    ✨ Generate with AI
-                  </button>
-                </div>
-                <input value={form.title} onChange={e => setTitle(e.target.value)} placeholder="e.g. How I Used Cognitive Psychology to Redesign Onboarding" className={INPUT_CLS} />
-                
-                {showAi && (
-                  <div className="mt-1 p-3 bg-accent-soft border border-accent/20 rounded-[10px] animate-in fade-in slide-in-from-top-2 duration-200">
-                    <label className="text-[10px] font-semibold text-accent uppercase tracking-wider mb-2 block">Context for AI Title</label>
-                    <div className="flex gap-2">
-                      <input 
-                        value={aiContext} 
-                        onChange={e => setAiContext(e.target.value)} 
-                        placeholder="e.g. Writing about leadership in design..." 
-                        onKeyDown={e => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            // We can't reuse the exact generateAiTitle scope directly here, so we inline the trigger:
-                            document.getElementById('blog-ai-gen')?.click();
-                          }
-                        }}
-                        className={`flex-1 px-3 py-1.5 rounded-[8px] border border-[var(--border)] bg-page text-ink text-[12px] outline-none focus:border-accent transition-colors`} 
-                      />
-                      <button 
-                        id="blog-ai-gen"
-                        onClick={async () => {
-                          setGeneratingAi(true);
-                          await new Promise(r => setTimeout(r, 1200));
-                          const topics = ['The Future of', 'Rethinking', 'Why We Need', 'A Deep Dive into', 'Mastering'];
-                          const prefix = topics[Math.floor(Math.random() * topics.length)];
-                          const generated = `${prefix} ${aiContext ? aiContext : 'Design & Tech'} in ${new Date().getFullYear()}`;
-                          setTitle(generated);
-                          setGeneratingAi(false);
-                          setShowAi(false);
-                          setAiContext('');
-                        }} 
-                        disabled={generatingAi || !aiContext.trim()} 
-                        className="bg-accent text-white font-semibold text-[11px] px-3 py-1.5 rounded-[8px] disabled:opacity-50 transition-all cursor-pointer whitespace-nowrap"
-                      >
-                        {generatingAi ? '⏳ Generating...' : 'Generate 🪄'}
-                      </button>
-                    </div>
-                  </div>
-                )}
+        {msg && (
+          <div className={`mb-8 px-6 py-4 rounded-2xl text-[14px] font-medium border animate-in fade-in slide-in-from-top-4 ${msg.type === 'success' ? 'bg-[#f0fdf4] text-[#16a34a] border-[#bcf0da]' : 'bg-[#fef2f2] text-[#dc2626] border-[#fecaca]'}`}>
+            {msg.type === 'success' ? '✨ ' : '⚠️ '}{msg.text}
+          </div>
+        )}
+
+        <div className="flex flex-col lg:flex-row gap-10">
+          {/* Main Content Area */}
+          <div className="flex-1 space-y-8">
+            
+            {/* Title Section */}
+            <div className="bg-white rounded-[24px] border border-[#e2e8f0] p-8 shadow-sm">
+              <div className="flex justify-between items-center mb-4">
+                <label className="text-[11px] font-bold text-[#94a3b8] uppercase tracking-[0.1em]">Title</label>
+                <button className="text-[11px] font-bold text-[#6366f1] flex items-center gap-1.5 hover:opacity-70 bg-white border border-[#eef2ff] px-3 py-1 rounded-full cursor-pointer transition-all shadow-sm">
+                  ✨ Generate with AI
+                </button>
               </div>
-              <FIELD label="Slug (URL)">
-                <input value={form.slug} onChange={e => setForm(f => ({ ...f, slug: e.target.value }))} placeholder="auto-generated-from-title" className={`${INPUT_CLS} text-accent font-mono text-[12px]`} />
-              </FIELD>
-              <FIELD label="Excerpt / Summary">
-                <textarea value={form.excerpt} onChange={e => setForm(f => ({ ...f, excerpt: e.target.value }))} placeholder="A one-liner that compels people to read…" rows={2} className={`${INPUT_CLS} resize-none`} />
-              </FIELD>
+              <input
+                value={form.title}
+                onChange={e => setTitle(e.target.value)}
+                placeholder="e.g. How I Used Cognitive Psychology to Redesign Onboarding"
+                className="w-full bg-transparent text-[22px] font-semibold text-[#0f172a] outline-none placeholder:text-[#cbd5e1] border-0 p-0 mb-6"
+              />
+              
+              <div className="pt-6 border-t border-[#f1f5f9]">
+                <label className="text-[11px] font-bold text-[#94a3b8] uppercase tracking-[0.1em] block mb-3">Slug (URL)</label>
+                <input
+                  value={form.slug}
+                  onChange={e => update('slug', e.target.value)}
+                  placeholder="auto-generated-from-title"
+                  className="w-full bg-[#f8fafc] text-[13px] text-[#475569] font-mono outline-none px-4 py-2.5 rounded-xl border border-[#f1f5f9] focus:border-[#e2e8f0] transition-colors"
+                />
+              </div>
+
+              <div className="mt-6 pt-6 border-t border-[#f1f5f9]">
+                <label className="text-[11px] font-bold text-[#94a3b8] uppercase tracking-[0.1em] block mb-3">Excerpt / Summary</label>
+                <textarea
+                  value={form.excerpt}
+                  onChange={e => update('excerpt', e.target.value)}
+                  placeholder="A one-liner that compels people to read..."
+                  rows={2}
+                  className="w-full bg-transparent text-[15px] text-[#475569] outline-none resize-none p-0 border-0 leading-relaxed placeholder:text-[#cbd5e1]"
+                />
+              </div>
             </div>
 
-            <div className="card p-6">
-              <p className="label uppercase text-ink-3 text-[11px] font-semibold mb-3">Content (Markdown)</p>
-              <textarea
-                value={form.content}
-                onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
-                placeholder={`# Start writing here\n\nUse markdown: **bold**, _italic_, ## Heading, - list item, [link](url)\n\nTip: write naturally, edit later 🖊️`}
-                rows={20}
-                className={`${INPUT_CLS} font-mono text-[13px] leading-relaxed resize-none`}
-              />
-              <p className="text-ink-3 text-[11px] mt-2">
-                ~{estimateRead(form.content)} min read · {word(form.content)} words
-              </p>
+            {/* Content Section */}
+            <div className="bg-white rounded-[24px] border border-[#e2e8f0] p-8 shadow-sm min-h-[600px] flex flex-col">
+              <label className="text-[11px] font-bold text-[#94a3b8] uppercase tracking-[0.1em] block mb-6">Content (Markdown)</label>
+              <div className="relative flex-1">
+                <textarea
+                  value={form.content}
+                  onChange={e => update('content', e.target.value)}
+                  placeholder="# Start writing here&#10;&#10;Use markdown: **bold**, _italic_, ## Heading, - list item, [link](url)&#10;&#10;Tip: write naturally, edit later 🖋️"
+                  className="w-full h-full min-h-[500px] bg-transparent text-[16px] leading-[1.8] text-[#334155] outline-none border-0 p-0 resize-none placeholder:text-[#cbd5e1]"
+                />
+              </div>
             </div>
           </div>
 
-          {/* Right: meta */}
-          <div className="space-y-4">
-            {/* ── Multi-Image Upload ── */}
-            <div className="card p-5">
-              <p className="label uppercase text-ink-3 text-[11px] font-semibold mb-1">Images</p>
-              <p className="text-ink-3 text-[10px] mb-3">First image used as cover. Up to 8 images.</p>
-
-              {images.length > 0 && (
-                <div className="grid grid-cols-2 gap-2 mb-3">
-                  {images.map((url, i) => (
-                    <div key={i} className="relative rounded-xl overflow-hidden aspect-video group">
-                      <img src={url} alt={`img-${i}`} className="object-cover w-full h-full" />
-                      <button
-                        onClick={() => removeImage(i)}
-                        className="absolute top-1.5 right-1.5 bg-black/60 text-white rounded-full w-5 h-5 text-[10px] flex items-center justify-center hover:bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer border-0"
-                      >×</button>
-                      {i === 0 && (
-                        <span className="absolute bottom-1.5 left-1.5 text-[9px] bg-accent text-white px-1.5 py-0.5 rounded-full font-semibold">Cover</span>
-                      )}
-                    </div>
-                  ))}
+          {/* Sidebar Area */}
+          <div className="w-full lg:w-[360px] space-y-8">
+            
+            {/* Images Card */}
+            <div className="bg-white rounded-[24px] border border-[#e2e8f0] p-8 shadow-sm">
+              <label className="text-[11px] font-bold text-[#94a3b8] uppercase tracking-[0.1em] block mb-1">Images</label>
+              <p className="text-[10px] text-[#94a3b8] mb-6 font-medium">First image used as cover. Up to 8 images.</p>
+              
+              <div className="space-y-4">
+                <button className="w-full py-8 border-2 border-dashed border-[#e2e8f0] rounded-[20px] flex flex-col items-center justify-center gap-3 hover:bg-[#f8fafc] hover:border-[#cbd5e1] transition-all group bg-transparent cursor-pointer">
+                  <span className="text-[20px] filter grayscale group-hover:grayscale-0 transition-all opacity-60 group-hover:opacity-100">📂</span>
+                  <span className="text-[12px] font-bold text-[#64748b]">Upload from device (multiple)</span>
+                </button>
+                
+                <div className="flex gap-2">
+                  <input 
+                    value={imageUrlInput}
+                    onChange={e => setImageUrlInput(e.target.value)}
+                    placeholder="Or paste image URL..." 
+                    className="flex-1 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-4 py-3 text-[13px] outline-none focus:border-[#cbd5e1] transition-all"
+                  />
+                  <button onClick={addImageUrl} className="bg-[#eff6ff] hover:bg-[#dbeafe] text-[#2563eb] px-4 rounded-xl font-bold text-[18px] border-0 cursor-pointer transition-colors">+</button>
                 </div>
-              )}
-
-              {images.length < 8 && (
-                <div className="space-y-2">
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-full py-2.5 rounded-[12px] border-2 border-dashed border-[var(--border)] hover:border-accent text-ink-3 hover:text-accent text-[12px] font-medium transition-all cursor-pointer bg-transparent flex items-center justify-center gap-2"
-                  >
-                    📁 Upload from device (multiple)
-                  </button>
-                  <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFileUpload} />
-
-                  <div className="flex gap-2">
-                    <input
-                      value={imageUrlInput}
-                      onChange={e => setImageUrlInput(e.target.value)}
-                      onKeyDown={e => e.key === 'Enter' && addImageUrl()}
-                      placeholder="Or paste image URL…"
-                      className={`${INPUT_CLS} text-[12px] flex-1`}
-                    />
-                    <button onClick={addImageUrl} className="px-3 py-2 rounded-[12px] bg-accent-soft text-accent text-[12px] font-semibold hover:bg-accent hover:text-white transition-all cursor-pointer border-0 shrink-0">
-                      + Add
-                    </button>
+                
+                {images.length > 0 && (
+                  <div className="grid grid-cols-3 gap-3 pt-2">
+                    {images.map((img, i) => (
+                      <div key={i} className="aspect-square rounded-[12px] bg-[#f8fafc] border border-[#e2e8f0] overflow-hidden relative group shadow-sm">
+                        <img src={img} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                        <button 
+                          onClick={() => setImages(prev => prev.filter((_, idx) => idx !== i))}
+                          className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[12px] font-bold transition-opacity border-0 cursor-pointer backdrop-blur-[2px]"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                </div>
-              )}
-            </div>
-
-            {/* Category & Tags */}
-            <div className="card p-5 space-y-4">
-              <FIELD label="Category">
-                <select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} className={INPUT_CLS}>
-                  <option value="">Select category…</option>
-                  {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </FIELD>
-              <FIELD label="Tags (comma-separated)">
-                <input value={form.tags} onChange={e => setForm(f => ({ ...f, tags: e.target.value }))} placeholder="UX, Onboarding, Psychology" className={INPUT_CLS} />
-              </FIELD>
-              <FIELD label="Read Time (min) — auto-estimated">
-                <input type="number" value={form.readTimeMin || estimateRead(form.content)} onChange={e => setForm(f => ({ ...f, readTimeMin: e.target.value }))} className={INPUT_CLS} />
-              </FIELD>
-            </div>
-
-            {/* Publish status */}
-            <div className="card p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-ink text-[13px]">Publish Now</p>
-                  <p className="text-ink-3 text-[11px]">Post visible to public</p>
-                </div>
-                <div onClick={() => setForm(f => ({ ...f, published: !f.published }))} className={`w-10 h-5 rounded-full relative transition-colors duration-200 cursor-pointer ${form.published ? 'bg-accent' : 'bg-card2'} border border-[var(--border)]`}>
-                  <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all duration-200 ${form.published ? 'left-5' : 'left-0.5'}`} />
-                </div>
+                )}
               </div>
             </div>
 
-            <button onClick={() => handleSave(form.published)} disabled={saving} className="btn-primary w-full justify-center">
-              {saving ? 'Saving…' : form.published ? '🚀 Publish Post' : '📄 Save Draft'}
-            </button>
+            {/* Classification Card */}
+            <div className="bg-white rounded-[24px] border border-[#e2e8f0] p-8 shadow-sm space-y-8">
+              <div>
+                <label className="text-[11px] font-bold text-[#94a3b8] uppercase tracking-[0.1em] block mb-3">Category</label>
+                <div className="relative">
+                  <select 
+                    value={form.category}
+                    onChange={e => update('category', e.target.value)}
+                    className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-4 py-3 text-[13px] font-semibold text-[#0f172a] outline-none appearance-none cursor-pointer focus:border-[#cbd5e1] transition-all"
+                  >
+                    <option value="">Select category...</option>
+                    <option value="UX Design">UX Design</option>
+                    <option value="Product Strategy">Product Strategy</option>
+                    <option value="Psychology">Psychology</option>
+                    <option value="Tech">Tech</option>
+                    <option value="Development">Development</option>
+                  </select>
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#94a3b8]">↓</div>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-[#94a3b8] uppercase tracking-[0.1em] block mb-3">Tags (comma-separated)</label>
+                <input
+                  value={form.tags}
+                  onChange={e => update('tags', e.target.value)}
+                  placeholder="UX, Onboarding, Psychology"
+                  className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-4 py-3 text-[13px] outline-none focus:border-[#cbd5e1] transition-all placeholder:text-[#cbd5e1] font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-[#94a3b8] uppercase tracking-[0.1em] block mb-3">Read Time (min) — auto-estimated</label>
+                <input
+                  type="number"
+                  value={form.readTime}
+                  onChange={e => update('readTime', parseInt(e.target.value))}
+                  className="w-full bg-[#f8fafc] border border-[#e2e8f0] rounded-xl px-4 py-3 text-[13px] font-bold text-[#0f172a] outline-none focus:border-[#cbd5e1] transition-all"
+                />
+              </div>
+            </div>
+
+            {/* Publishing Card */}
+            <div className="bg-white rounded-[24px] border border-[#e2e8f0] p-8 shadow-sm">
+               <div className="flex items-center justify-between mb-8">
+                 <div>
+                   <p className="text-[14px] font-bold text-[#0f172a] mb-1">Publish Now</p>
+                   <p className="text-[11px] text-[#64748b] font-medium">Post visible to public</p>
+                 </div>
+                 <button 
+                  onClick={() => update('status', form.status === 'published' ? 'draft' : 'published')}
+                  className={`w-12 h-6 rounded-full relative transition-all duration-300 border-0 cursor-pointer ${form.status === 'published' ? 'bg-[#10b981] shadow-inner' : 'bg-[#e2e8f0]'}`}
+                 >
+                   <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm transition-all duration-300 transform ${form.status === 'published' ? 'translate-x-7' : 'translate-x-1'}`} />
+                 </button>
+               </div>
+               
+               <button 
+                onClick={() => handleSave(false)} 
+                disabled={saving}
+                className="w-full bg-[#0f172a] text-white font-bold text-[14px] py-4 rounded-2xl hover:bg-[#1e293b] transition-all border-0 cursor-pointer disabled:opacity-50 shadow-md shadow-slate-200 flex items-center justify-center gap-2"
+               >
+                 {saving ? (
+                   <span className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                 ) : (
+                   <>💾 Save Draft</>
+                 )}
+               </button>
+            </div>
           </div>
         </div>
       </main>
     </div>
+  )
+}
+
+export default function DashboardBlogNewPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#f8f9fc] flex items-center justify-center"><div className="w-8 h-8 rounded-full border-2 border-accent border-t-transparent animate-spin" /></div>}>
+      <BlogFormInner />
+    </Suspense>
   )
 }

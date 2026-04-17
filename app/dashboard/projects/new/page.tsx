@@ -379,8 +379,16 @@ export default function NewProjectPage() {
               ))}
             </div>
 
-            <button onClick={handleSave} disabled={saving} className="btn-primary w-full justify-center">
-              {saving ? 'Saving…' : '🚀 Create Project'}
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="btn-primary w-full justify-center transition-all duration-200 ease-out hover:scale-[1.01] active:scale-[0.98] disabled:scale-100 disabled:opacity-60"
+            >
+              {saving ? (
+                <span className="flex items-center gap-2">
+                  <span className="animate-spin">⏳</span> Saving…
+                </span>
+              ) : '🚀 Create Project'}
             </button>
           </div>
         </div>

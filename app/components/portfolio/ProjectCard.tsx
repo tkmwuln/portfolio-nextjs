@@ -22,10 +22,12 @@ type ProjectCardProps = {
 };
 
 const FALLBACK_GRADIENTS = [
-  "linear-gradient(135deg, #c8d4f8 0%, #b8c5f5 100%)", // PM – periwinkle blue
-  "linear-gradient(135deg, #ddc8f5 0%, #c8b8f0 100%)", // UX – soft violet
-  "linear-gradient(135deg, #b8f0d8 0%, #a8e8cc 100%)", // DS – mint green
-  "linear-gradient(135deg, #f5c8d4 0%, #f0b8c5 100%)", // warm pink
+  "linear-gradient(140deg, #2c3e50 0%, #3498db 100%)",
+  "linear-gradient(140deg, #0f2027 0%, #2c5364 100%)",
+  "linear-gradient(140deg, #4b1248 0%, #f0c27b 100%)",
+  "linear-gradient(140deg, #373b44 0%, #4286f4 100%)",
+  "linear-gradient(140deg, #1a1c2c 0%, #4a192c 100%)",
+  "linear-gradient(140deg, #141e30 0%, #243b55 100%)",
 ];
 
 export default function ProjectCard({
@@ -44,45 +46,87 @@ export default function ProjectCard({
   return (
     <Link
       href={`/portfolio/${slug}`}
-      className="group relative rounded-card overflow-hidden shadow-card block no-underline"
-      style={{ height: "220px" }}
+      className="group flex flex-col no-underline bg-transparent focus-visible:outline-none"
+      style={{ touchAction: "manipulation" }}
     >
-      <div className="absolute inset-0 transition-transform duration-500 group-hover:scale-105">
-        {coverImageUrl ? (
-          <Image src={coverImageUrl} alt={title} fill className="object-cover" />
-        ) : (
-          <>
-            {/* Soft purple thumbnail base */}
-            <img src="/images/project-thumbnail-default.png" alt="" className="object-cover w-full h-full" />
-            {/* Colored gradient overlay for variety */}
-            <div className="absolute inset-0 mix-blend-multiply opacity-60" style={{ background: bg }} />
-          </>
-        )}
+      {/* ── Square Thumbnail ── */}
+      <div
+        className="relative w-full rounded-[16px] overflow-hidden"
+        style={{ aspectRatio: "1 / 1" }}
+      >
+        <div className="absolute inset-0 transition-transform duration-500 ease-out group-hover:scale-[1.04]">
+          {coverImageUrl ? (
+            <Image
+              src={coverImageUrl}
+              alt={title}
+              fill
+              className="object-cover"
+              sizes="(max-width: 640px) 80vw, 290px"
+            />
+          ) : (
+            <>
+              <img
+                src="/images/project-thumbnail-default.png"
+                alt=""
+                className="object-cover w-full h-full"
+              />
+              <div
+                className="absolute inset-0 mix-blend-multiply opacity-60"
+                style={{ background: bg }}
+              />
+            </>
+          )}
+        </div>
       </div>
 
-      <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
-
-      <div className="absolute top-3.5 left-4 text-[11px] text-white/50 bg-black/20 backdrop-blur-sm rounded-pill px-2.5 py-1">
-        {String(index + 1).padStart(2, "0")}
-      </div>
-
-      <div className="absolute bottom-0 left-0 right-0 p-5">
-        {category && (
-          <p className="text-[10px] uppercase tracking-[.08em] font-semibold text-white/60 mb-1">
-            {category.name}
-          </p>
-        )}
-        <h3 className="font-display text-[17px] font-bold text-white leading-tight tracking-tight">
+      {/* ── Content ── */}
+      <div className="flex flex-col gap-1.5 pt-3.5 px-0.5">
+        {/* Title */}
+        <p className="font-display text-[15px] font-semibold text-ink leading-snug tracking-tight group-hover:text-ink transition-colors duration-200 line-clamp-2">
           {title}
-        </h3>
-        {metrics[0] && (
-          <p className="text-[11px] text-white/50 mt-1">
-            {metrics[0].metricValue}
-            {metrics[0].metricUnit} {metrics[0].metricLabel}
-            {clientName && ` · ${clientName}`}
-            {projectYear && ` ${projectYear}`}
-          </p>
-        )}
+        </p>
+
+        {/* Metadata row */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {projectYear && (
+            <span className="text-[12px] text-ink-3">{projectYear}</span>
+          )}
+          {clientName && projectYear && (
+            <span className="text-[12px] text-ink-3 opacity-40">·</span>
+          )}
+          {category && (
+            <span className="text-[12px] text-ink-3">{category.name}</span>
+          )}
+          {metrics[0] && (
+            <>
+              <span className="text-[12px] text-ink-3 opacity-40">·</span>
+              <span className="text-[12px] text-ink-3 font-semibold">
+                {metrics[0].metricValue}
+              </span>
+            </>
+          )}
+        </div>
+
+        {/* CTA */}
+        <span className="text-[12px] text-ink-2 font-medium flex items-center gap-1 group-hover:gap-2 transition-all duration-200 mt-0.5">
+          View project
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 12 12"
+            fill="none"
+            aria-hidden="true"
+            className="text-ink-3 transition-transform duration-200 group-hover:translate-x-0.5"
+          >
+            <path
+              d="M2.5 6h7m-3-3 3 3-3 3"
+              stroke="currentColor"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </span>
       </div>
     </Link>
   );

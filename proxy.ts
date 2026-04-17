@@ -1,10 +1,10 @@
 import { type NextRequest } from 'next/server'
 import { updateSession } from '@/utils/supabase/middleware'
 
-export async function middleware(request: NextRequest) {
-  // updateSession will parse cookies, refresh the user session, and if they 
-  // attempt to access '/dashboard/*' without being logged in, it will redirect 
-  // them safely back to '/login'.
+// Next.js 16: "middleware" is now called "proxy"
+export async function proxy(request: NextRequest) {
+  // updateSession parses cookies, refreshes the user session, and if they
+  // attempt to access '/dashboard/*' without being logged in, redirects to '/login'.
   return await updateSession(request)
 }
 

@@ -4,131 +4,95 @@ import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import Sidebar from '@/app/components/dashboard/Sidebar'
 
-const SIDEBAR = [
-  { label: 'Overview', href: '/dashboard', icon: '📊' },
-  { label: 'Projects', href: '/dashboard/projects', icon: '🚀' },
-  { label: 'Blog', href: '/dashboard/blog', icon: '📝' },
-  { label: 'Profile', href: '/dashboard/profile', icon: '👤' },
-  { label: 'Access', href: '/dashboard/access', icon: '🔐' },
-]
+type BlogPost = {
+  id: string
+  title: string
+  slug: string
+  excerpt?: string | null
+  status: 'published' | 'draft' | 'archived'
+  createdAt: string
+  tags?: { id: string; name: string }[]
+}
 
-const STATIC_POSTS = [
-  { id: 'b1', title: 'How Cognitive Psychology Transformed Our Fintech Onboarding', slug: 'cognitive-psychology-fintech-onboarding', published: true, createdAt: '2024-03-15', category: 'Product Management' },
-  { id: 'b2', title: 'Why Government UX Needs a Different Playbook', slug: 'government-ux-playbook', published: true, createdAt: '2024-02-28', category: 'UX Design' },
-  { id: 'b3', title: 'Building a Design System from Zero: Lessons from 200+ Components', slug: 'design-system-from-zero', published: true, createdAt: '2024-01-20', category: 'Design System' },
-  { id: 'b4', title: 'Service Design vs UX Design: What PMs Need to Know', slug: 'service-design-vs-ux', published: false, createdAt: '2024-01-05', category: 'UX Design' },
-]
+function formatDate(d: string) {
+  return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+}
 
-type Post = { id: string; title: string; slug: string; published: boolean; createdAt: string; category?: string }
-type Filter = 'all' | 'published' | 'draft'
-
-export default function AdminBlogPage() {
+export default function DashboardBlogPage() {
   const router = useRouter()
   const supabase = createClient()
-  const [posts, setPosts] = useState<Post[]>([])
+  const [posts, setPosts] = useState<BlogPost[]>([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<Filter>('all')
+  const [filter, setFilter] = useState<'all' | 'published' | 'draft'>('all')
+  const [deleting, setDeleting] = useState<string | null>(null)
 
   useEffect(() => {
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
-      const { data } = await supabase.from('blog_posts').select('id, title, slug, published, createdAt, category').order('createdAt', { ascending: false })
-      const live = data || []
-      setPosts(live.length > 0 ? live : STATIC_POSTS)
+
+      const res = await fetch('/api/blog?all=true')
+      if (res.ok) {
+        const data = await res.json()
+        setPosts(data)
+      }
       setLoading(false)
     }
     load()
   }, [supabase, router])
 
-  const togglePublish = async (id: string, current: boolean) => {
-    await supabase.from('blog_posts').update({ published: !current }).eq('id', id)
-    setPosts(p => p.map(x => x.id === id ? { ...x, published: !current } : x))
+  const togglePublish = async (post: BlogPost) => {
+    const nextStatus = post.status === 'published' ? 'draft' : 'published'
+    const res = await fetch(`/api/blog/${post.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...post, published: nextStatus === 'published' }),
+    })
+    if (res.ok) {
+      setPosts(p => p.map(x => x.id === post.id ? { ...x, status: nextStatus } : x))
+    }
   }
 
   const deletePost = async (id: string) => {
-    if (!confirm('Delete this post?')) return
-    await supabase.from('blog_posts').delete().eq('id', id)
-    setPosts(p => p.filter(x => x.id !== id))
+    if (!confirm('Delete this post? This cannot be undone.')) return
+    setDeleting(id)
+    const res = await fetch(`/api/blog/${id}`, { method: 'DELETE' })
+    if (res.ok) {
+      setPosts(p => p.filter(x => x.id !== id))
+    }
+    setDeleting(null)
   }
 
-  const published = posts.filter(p => p.published)
-  const drafts = posts.filter(p => !p.published)
-  const filtered = filter === 'all' ? posts : filter === 'published' ? published : drafts
+  const filtered = posts.filter(p =>
+    filter === 'all' ? true : filter === 'published' ? p.status === 'published' : p.status !== 'published'
+  )
 
   return (
-    <div className="min-h-screen bg-page flex">
-      {/* Mobile-aware sidebar */}
-      <aside className="w-64 shrink-0 bg-card border-r border-[var(--border)] hidden md:flex flex-col py-8 px-5 sticky top-0 h-screen">
-        <div className="mb-8">
-          <Link href="/" className="font-display font-extrabold text-[17px] tracking-tight text-ink no-underline" style={{ letterSpacing: '-0.03em' }}>
-            Putri Wulandari<span className="text-accent">.</span>
-          </Link>
-          <p className="text-[11px] text-ink-3 mt-1 font-semibold tracking-wider uppercase">Admin Dashboard</p>
-        </div>
-        <nav className="space-y-1 flex-1">
-          {SIDEBAR.map(item => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-[12px] text-[13px] font-medium no-underline transition-all duration-200 ${
-                item.href === '/dashboard/blog' ? 'bg-accent-soft text-accent' : 'text-ink-2 hover:bg-card2 hover:text-ink'
-              }`}
-            >
-              <span>{item.icon}</span>{item.label}
-            </Link>
-          ))}
-        </nav>
-        <div className="space-y-2 mt-3">
-          <Link href="/" target="_blank" className="flex items-center gap-2 w-full px-3 py-2.5 rounded-[12px] text-[13px] font-semibold text-accent bg-accent-soft no-underline hover:bg-accent hover:text-white transition-all duration-200">
-            🌐 View Live Site ↗
-          </Link>
-          <Link href="/" className="flex items-center gap-3 px-3 py-2.5 rounded-[12px] text-[13px] text-ink-2 hover:text-ink no-underline transition-all duration-200">
-            ← Back to Site
-          </Link>
-        </div>
-      </aside>
+    <div className="min-h-screen bg-page flex flex-col md:flex-row">
+      <Sidebar />
 
-      <main className="flex-1 p-4 md:p-8 overflow-x-hidden">
-        {/* Mobile top nav */}
-        <div className="flex md:hidden items-center justify-between mb-4 pb-3 border-b border-[var(--border)]">
-          <Link href="/dashboard" className="font-display font-extrabold text-[15px] text-ink no-underline">← Dashboard</Link>
-          <Link href="/" target="_blank" className="text-[12px] text-accent font-semibold">View Site ↗</Link>
-        </div>
-
+      {/* Main */}
+      <main className="flex-1 p-8">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="font-display text-[24px] md:text-[28px] font-extrabold text-ink tracking-tight">Blog Posts</h1>
-            <p className="text-ink-2 text-sm mt-1">{posts.length} total · {published.length} published · {drafts.length} draft</p>
+            <h1 className="font-display text-[28px] font-extrabold text-ink tracking-tight">Blog Posts</h1>
+            <p className="text-ink-2 text-sm mt-1">{posts.length} total · synced from database</p>
           </div>
           <Link href="/dashboard/blog/new" className="btn-primary text-[13px] py-2.5 px-5">
-            ✏️ Write Post
+            + New Post
           </Link>
         </div>
 
-        {/* Filter tabs with counters */}
-        <div className="flex gap-2 mb-5 flex-wrap">
-          {([
-            { key: 'all', label: `All`, count: posts.length },
-            { key: 'published', label: `Published`, count: published.length },
-            { key: 'draft', label: `Draft`, count: drafts.length },
-          ] as { key: Filter, label: string, count: number }[]).map(f => (
-            <button
-              key={f.key}
-              onClick={() => setFilter(f.key)}
-              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-pill text-[12px] font-semibold transition-all border ${
-                filter === f.key
-                  ? 'bg-ink text-white border-ink dark:bg-white dark:text-white dark:border-white'
-                  : 'bg-card2 text-ink-2 border-[var(--border)] hover:border-ink hover:text-ink'
-              }`}
-            >
-              {f.label}
-              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
-                filter === f.key
-                  ? 'bg-white/20 text-white dark:bg-black/20 dark:text-inherit'
-                  : 'bg-[var(--border)] text-ink-3'
-              }`}>{f.count}</span>
+        {/* Filter tabs */}
+        <div className="flex gap-2 mb-5">
+          {(['all', 'published', 'draft'] as const).map(f => (
+            <button key={f} onClick={() => setFilter(f)} className={`flex items-center gap-1.5 px-4 py-1.5 rounded-pill text-[12px] font-semibold transition-all border cursor-pointer ${filter === f ? 'bg-ink text-white border-ink' : 'bg-card2 text-ink-2 border-[var(--border)] hover:border-ink hover:text-ink'}`}>
+              {f === 'all' ? 'All' : f === 'published' ? 'Published' : 'Draft'}
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${filter === f ? 'bg-white/20 text-white' : 'bg-[var(--border)] text-ink-3'}`}>
+                {f === 'all' ? posts.length : f === 'published' ? posts.filter(p => p.status === 'published').length : posts.filter(p => p.status !== 'published').length}
+              </span>
             </button>
           ))}
         </div>
@@ -138,50 +102,65 @@ export default function AdminBlogPage() {
             <div className="w-8 h-8 rounded-full border-2 border-accent border-t-transparent animate-spin mx-auto" />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="card p-10 text-center">
-            <p className="text-ink-2 mb-4">No {filter === 'all' ? '' : filter} posts yet.</p>
-            <Link href="/dashboard/blog/new" className="btn-primary">✏️ Write Post</Link>
+          <div className="card p-12 text-center">
+            <p className="text-4xl mb-3">📝</p>
+            <p className="font-display text-lg font-bold text-ink mb-1">No posts yet</p>
+            <p className="text-ink-2 text-sm mb-4">Create your first blog post to get started.</p>
+            <Link href="/dashboard/blog/new" className="btn-primary inline-flex">+ New Post</Link>
           </div>
         ) : (
-          <div className="card overflow-hidden">
-            <table className="w-full text-[13px]">
+          <div className="card overflow-x-auto">
+            <table className="w-full text-[13px] min-w-[700px]">
               <thead>
                 <tr className="border-b border-[var(--border)]">
                   <th className="text-left px-5 py-3 text-ink-3 font-semibold tracking-wider text-[11px] uppercase">Title</th>
-                  <th className="text-left px-4 py-3 text-ink-3 font-semibold tracking-wider text-[11px] uppercase hidden sm:table-cell">Category</th>
+                  <th className="text-left px-4 py-3 text-ink-3 font-semibold tracking-wider text-[11px] uppercase">Tags</th>
+                  <th className="text-left px-4 py-3 text-ink-3 font-semibold tracking-wider text-[11px] uppercase">Date</th>
                   <th className="text-left px-4 py-3 text-ink-3 font-semibold tracking-wider text-[11px] uppercase">Status</th>
                   <th className="text-left px-4 py-3 text-ink-3 font-semibold tracking-wider text-[11px] uppercase">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((p) => (
-                  <tr key={p.id} className="border-b border-[var(--border)] hover:bg-card2 transition-colors last:border-0">
+                {filtered.map(post => (
+                  <tr key={post.id} className="border-b border-[var(--border)] hover:bg-card2 transition-colors duration-150 last:border-0">
                     <td className="px-5 py-3.5">
-                      <div>
-                        <p className="font-medium text-ink">{p.title}</p>
-                        <p className="text-[11px] text-ink-3 mt-0.5 font-mono">/blog/{p.slug}</p>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3.5 hidden sm:table-cell">
-                      {p.category && (
-                        <span className="text-[11px] bg-accent-soft text-accent px-2 py-0.5 rounded-pill font-semibold">{p.category}</span>
-                      )}
+                      <p className="font-semibold text-ink">{post.title}</p>
+                      <p className="text-[11px] text-ink-3 mt-0.5 font-mono">/blog/{post.slug}</p>
+                      {post.excerpt && <p className="text-[11px] text-ink-3 mt-0.5 line-clamp-1">{post.excerpt}</p>}
                     </td>
                     <td className="px-4 py-3.5">
+                      <div className="flex flex-wrap gap-1">
+                        {(post.tags || []).slice(0, 2).map(t => (
+                          <span key={t.id} className="text-[10px] px-2 py-0.5 bg-accent-soft text-accent rounded-full font-medium">{t.name}</span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3.5 text-[12px] text-ink-2">{formatDate(post.createdAt)}</td>
+                    <td className="px-4 py-3.5">
                       <button
-                        onClick={() => togglePublish(p.id, p.published)}
-                        className={`px-3 py-1 rounded-pill text-[11px] font-semibold cursor-pointer border-0 transition-all duration-200 ${
-                          p.published ? 'bg-[rgba(34,201,129,0.15)] text-[#22c981]' : 'bg-card2 text-ink-3'
-                        }`}
+                        onClick={() => togglePublish(post)}
+                        className={`px-3 py-1 rounded-pill text-[11px] font-semibold cursor-pointer border-0 transition-all duration-200 ${post.status === 'published' ? 'bg-[rgba(34,201,129,0.15)] text-[#22c981]' : 'bg-card2 text-ink-3'}`}
                       >
-                        {p.published ? '✅ Published' : '📝 Draft'}
+                        {post.status === 'published' ? '✅ Published' : '📝 Draft'}
                       </button>
                     </td>
                     <td className="px-4 py-3.5">
                       <div className="flex items-center gap-2">
-                        <Link href={`/dashboard/blog/new?edit=${p.slug}`} className="text-accent text-[12px] no-underline hover:underline font-medium">Edit ✏️</Link>
+                        <Link href={`/dashboard/blog/new?edit=${post.id}`} className="text-accent text-[12px] no-underline hover:underline font-medium">
+                          Edit ✏️
+                        </Link>
                         <span className="text-ink-3">·</span>
-                        <button onClick={() => deletePost(p.id)} className="text-red-400 hover:text-red-500 text-[12px] cursor-pointer bg-transparent border-0">Delete</button>
+                        <a href={`/blog/${post.slug}`} target="_blank" className="text-ink-2 text-[12px] no-underline hover:underline">
+                          View ↗
+                        </a>
+                        <span className="text-ink-3">·</span>
+                        <button
+                          onClick={() => deletePost(post.id)}
+                          disabled={deleting === post.id}
+                          className="text-red-400 hover:text-red-500 text-[12px] cursor-pointer bg-transparent border-0 disabled:opacity-50 p-0"
+                        >
+                          {deleting === post.id ? '...' : 'Delete'}
+                        </button>
                       </div>
                     </td>
                   </tr>

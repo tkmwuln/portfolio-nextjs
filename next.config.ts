@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ['@prisma/client', 'prisma'],
   images: {
     remotePatterns: [
       {
@@ -14,6 +15,10 @@ const nextConfig: NextConfig = {
         pathname: "/**",
       },
     ],
+  },
+  // Turbopack CSS config — avoids worker process port-binding on macOS
+  turbopack: {
+    resolveExtensions: ['.tsx', '.ts', '.jsx', '.js', '.mjs', '.json', '.css'],
   },
   async redirects() {
     return [

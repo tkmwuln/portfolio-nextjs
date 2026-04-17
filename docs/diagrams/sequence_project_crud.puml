@@ -1,0 +1,57 @@
+@startuml Project_CRUD_Sequence
+skinparam style strictuml
+skinparam responseMessageBelowArrow true
+
+actor "Admin (Dashboard)" as Admin
+participant "Dashboard UI" as UI
+participant "API: /api/projects" as API
+participant "Supabase Auth" as Auth
+participant "Prisma Client" as Prisma
+database "PostgreSQL" as DB
+
+== Create Project ==
+Admin -> UI : Input Project Data
+Admin -> UI : Click "Save"
+activate UI
+
+UI -> API : POST /api/projects (JSON)
+activate API
+
+API -> Auth : getUser()
+activate Auth
+Auth --> API : { user }
+deactivate Auth
+
+alt #LightPink Unauthorized
+    API --> UI : 401 Unauthorized
+end
+
+API -> API : generate slug from title
+
+API -> Prisma : prisma.project.create({ data })
+activate Prisma
+Prisma -> DB : INSERT INTO "Project" ...
+activate DB
+DB --> Prisma : { projectRecord }
+deactivate DB
+Prisma --> API : project
+deactivate Prisma
+
+API --> UI : 201 Created (project)
+UI --> Admin : Show Success Notification
+deactivate API
+deactivate UI
+
+== Read Projects (Admin View) ==
+Admin -> UI : Open Project List
+activate UI
+UI -> API : GET /api/projects?all=true
+activate API
+API -> Prisma : findMany({ include: tags, category })
+Prisma --> API : projects[]
+API --> UI : 200 OK (projects)
+UI --> Admin : Render Project Cards
+deactivate API
+deactivate UI
+
+@enduml
